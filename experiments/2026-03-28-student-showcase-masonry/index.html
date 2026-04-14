@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Student App Showcase - Pretext Masonry Prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --page-bg: #f7f3ea;
+        --page-ink: #1f2630;
+        --muted: #677386;
+        --card-bg: rgba(255, 255, 255, 0.9);
+        --card-border: rgba(47, 61, 82, 0.08);
+        --card-shadow: 0 18px 46px rgba(35, 46, 64, 0.08);
+        --panel-bg: rgba(255, 251, 245, 0.78);
+        --panel-border: rgba(60, 76, 99, 0.1);
+        --button-bg: rgba(255, 255, 255, 0.82);
+        --button-border: rgba(47, 61, 82, 0.14);
+        --button-active-ink: #ffffff;
+        --accent-default: #7c8aa3;
+        --radius-xl: 28px;
+        --radius-lg: 22px;
+        --radius-md: 16px;
+        --site-width: min(1400px, calc(100vw - 32px));
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--page-ink);
+        font-family: "Inter", Arial, sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(101, 210, 193, 0.18), transparent 32%),
+          radial-gradient(circle at top right, rgba(255, 184, 104, 0.22), transparent 28%),
+          linear-gradient(180deg, #fff9f0 0%, var(--page-bg) 46%, #f4efe6 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(31, 38, 48, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(31, 38, 48, 0.03) 1px, transparent 1px);
+        background-size: 24px 24px;
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.18), transparent 72%);
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .page {
+        width: var(--site-width);
+        margin: 0 auto;
+        padding: 28px 0 96px;
+      }
+
+      .hero {
+        display: grid;
+        gap: 18px;
+        padding: 16px 0 14px;
+      }
+
+      .hero__panel {
+        display: grid;
+        gap: 18px;
+        padding: 28px;
+        border: 1px solid var(--panel-border);
+        border-radius: var(--radius-xl);
+        background: var(--panel-bg);
+        backdrop-filter: blur(16px);
+        box-shadow: 0 18px 60px rgba(53, 66, 85, 0.08);
+      }
+
+      .hero__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font: 600 12px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #4e5a6e;
+      }
+
+      .hero__eyebrow::before {
+        content: "";
+        width: 44px;
+        height: 1px;
+        background: linear-gradient(90deg, #51bea9, rgba(81, 190, 169, 0));
+      }
+
+      .hero__headline {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+      }
+
+      .hero__headline h1 {
+        margin: 0;
+        font-family: "Fraunces", Georgia, serif;
+        font-size: clamp(2.45rem, 5vw, 4.75rem);
+        line-height: 0.93;
+        letter-spacing: -0.05em;
+        max-width: 11ch;
+      }
+
+      .hero__lede {
+        display: grid;
+        align-content: start;
+        gap: 14px;
+      }
+
+      .hero__lede p {
+        margin: 0;
+        font: 400 16px/1.7 Inter, Arial, sans-serif;
+        color: var(--muted);
+        max-width: 60ch;
+      }
+
+      .hero__stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .stat {
+        min-width: 160px;
+        padding: 14px 16px;
+        border: 1px solid rgba(53, 66, 85, 0.08);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.82);
+      }
+
+      .stat__label {
+        display: block;
+        margin-bottom: 4px;
+        font: 600 11px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #728097;
+      }
+
+      .stat__value {
+        display: block;
+        font: 700 20px/1.1 Inter, Arial, sans-serif;
+      }
+
+      .toolbar {
+        position: sticky;
+        top: 16px;
+        z-index: 20;
+        display: grid;
+        gap: 18px;
+        margin-top: 24px;
+        padding: 18px 20px;
+        border: 1px solid var(--panel-border);
+        border-radius: var(--radius-lg);
+        background: rgba(255, 253, 249, 0.84);
+        backdrop-filter: blur(14px);
+        box-shadow: 0 16px 42px rgba(53, 66, 85, 0.08);
+      }
+
+      .toolbar__row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .toolbar__group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .toolbar__label {
+        font: 600 12px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #677386;
+      }
+
+      .toolbar__group button {
+        appearance: none;
+        border: 1px solid var(--button-border);
+        border-radius: 999px;
+        background: var(--button-bg);
+        color: #2a3341;
+        cursor: pointer;
+        font: 600 14px/1 Inter, Arial, sans-serif;
+        padding: 10px 15px;
+        transition:
+          transform 160ms ease,
+          background-color 160ms ease,
+          border-color 160ms ease,
+          color 160ms ease,
+          box-shadow 160ms ease;
+      }
+
+      .toolbar__group button:hover,
+      .toolbar__group button:focus-visible {
+        transform: translateY(-1px);
+        outline: none;
+        box-shadow: 0 10px 24px rgba(50, 63, 82, 0.11);
+      }
+
+      .toolbar__group button[data-active="true"] {
+        color: var(--button-active-ink);
+        border-color: transparent;
+        box-shadow: 0 12px 24px rgba(50, 63, 82, 0.16);
+      }
+
+      .toolbar__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        color: #5e6a7d;
+        font: 500 13px/1.4 Inter, Arial, sans-serif;
+      }
+
+      .toolbar__meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.78);
+        border: 1px solid rgba(56, 70, 92, 0.1);
+      }
+
+      .wall-shell {
+        position: relative;
+        margin-top: 24px;
+        padding-bottom: 24px;
+      }
+
+      .story {
+        display: grid;
+        gap: 18px;
+        margin-top: 24px;
+      }
+
+      .story__lead {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+        padding: 22px 24px;
+        border: 1px solid var(--panel-border);
+        border-radius: var(--radius-lg);
+        background: rgba(255, 252, 248, 0.86);
+        box-shadow: 0 14px 36px rgba(53, 66, 85, 0.06);
+      }
+
+      .story__eyebrow {
+        margin: 0 0 10px;
+        color: #5e6a7d;
+        font: 700 11px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .story__lead h2 {
+        margin: 0;
+        font-family: "Fraunces", Georgia, serif;
+        font-size: clamp(1.7rem, 2.6vw, 2.4rem);
+        line-height: 0.98;
+        letter-spacing: -0.04em;
+      }
+
+      .story__lead p {
+        margin: 12px 0 0;
+        color: var(--muted);
+        font: 400 15px/1.7 Inter, Arial, sans-serif;
+      }
+
+      .story__note {
+        font-size: 13px;
+      }
+
+      .live-budget {
+        display: grid;
+        align-content: start;
+        gap: 10px;
+        padding: 18px;
+        border: 1px solid rgba(53, 66, 85, 0.08);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.86);
+      }
+
+      .live-budget__label,
+      .live-budget__foot {
+        color: #6b7789;
+        font: 600 12px/1.4 Inter, Arial, sans-serif;
+        letter-spacing: 0.03em;
+      }
+
+      .live-budget__value {
+        font: 800 clamp(2rem, 4vw, 3.2rem)/0.95 Inter, Arial, sans-serif;
+        letter-spacing: -0.05em;
+      }
+
+      .live-budget__caption {
+        color: #364254;
+        font: 700 14px/1.4 Inter, Arial, sans-serif;
+      }
+
+      .live-budget__track {
+        height: 12px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(53, 66, 85, 0.09);
+      }
+
+      .live-budget__fill {
+        height: 100%;
+        width: 0;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #1c9f8a, #4a76d1);
+        transition: width 180ms ease;
+      }
+
+      .live-budget__fill[data-state="warn"] {
+        background: linear-gradient(90deg, #dd8d2a, #d35e55);
+      }
+
+      .benchmark-grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .benchmark-card {
+        display: grid;
+        gap: 14px;
+        padding: 20px;
+        border: 1px solid rgba(53, 66, 85, 0.08);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.88);
+        box-shadow: 0 12px 30px rgba(53, 66, 85, 0.05);
+      }
+
+      .benchmark-card h3 {
+        margin: 0;
+        font: 700 18px/1.2 Inter, Arial, sans-serif;
+      }
+
+      .benchmark-card p {
+        margin: 0;
+        color: var(--muted);
+        font: 400 14px/1.6 Inter, Arial, sans-serif;
+      }
+
+      .benchmark-card__ratio {
+        color: #314056;
+        font: 700 13px/1.4 Inter, Arial, sans-serif;
+      }
+
+      .benchmark-row {
+        display: grid;
+        gap: 8px;
+      }
+
+      .benchmark-row__head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .benchmark-row__label {
+        color: #344157;
+        font: 600 13px/1.4 Inter, Arial, sans-serif;
+      }
+
+      .benchmark-row__value {
+        color: #1f2630;
+        font: 800 15px/1 Inter, Arial, sans-serif;
+      }
+
+      .benchmark-row__track {
+        height: 10px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(53, 66, 85, 0.09);
+      }
+
+      .benchmark-row__bar {
+        height: 100%;
+        min-width: 10px;
+        border-radius: inherit;
+      }
+
+      .benchmark-row__bar--fast {
+        background: linear-gradient(90deg, #1c9f8a, #55c2b0);
+      }
+
+      .benchmark-row__bar--slow {
+        background: linear-gradient(90deg, #dd8d2a, #d35e55);
+      }
+
+      .benchmark-grid__foot {
+        grid-column: 1 / -1;
+        margin: 0;
+        color: #6b7789;
+        font: 500 13px/1.6 Inter, Arial, sans-serif;
+      }
+
+      .status-card,
+      .empty-card {
+        margin-top: 18px;
+        padding: 24px;
+        border: 1px solid rgba(47, 61, 82, 0.1);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.88);
+        color: #425063;
+        box-shadow: 0 16px 38px rgba(43, 55, 74, 0.08);
+      }
+
+      .status-card[hidden],
+      .empty-card[hidden] {
+        display: none;
+      }
+
+      .wall {
+        position: relative;
+        min-height: 360px;
+      }
+
+      .card {
+        position: absolute;
+        display: grid;
+        align-content: start;
+        gap: 0;
+        padding: 20px 20px 20px 24px;
+        border: 1px solid var(--card-border);
+        border-radius: 24px;
+        background: var(--card-bg);
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        transition:
+          transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+          box-shadow 180ms ease,
+          opacity 180ms ease;
+        will-change: transform;
+      }
+
+      .card::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 6px;
+        background: var(--accent, var(--accent-default));
+      }
+
+      .card:hover,
+      .card:focus-within {
+        box-shadow: 0 24px 58px rgba(34, 45, 62, 0.14);
+      }
+
+      .card__chip {
+        display: inline-flex;
+        align-items: center;
+        align-self: start;
+        min-height: 30px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--accent) 14%, white);
+        color: color-mix(in srgb, var(--accent) 62%, #142133);
+        font: 700 12px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .card__title {
+        margin: 14px 0 0;
+        font: 700 18px/24px Inter, Arial, sans-serif;
+        letter-spacing: -0.03em;
+      }
+
+      .card__meta {
+        margin: 10px 0 0;
+        color: #6d788a;
+        font: 500 13px/18px Inter, Arial, sans-serif;
+      }
+
+      .card__description {
+        margin: 14px 0 0;
+        color: #334154;
+        font: 400 14px/22px Inter, Arial, sans-serif;
+      }
+
+      .card__footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .card__note {
+        color: #748295;
+        font: 600 12px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.02em;
+      }
+
+      .card__link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #162235;
+        font: 600 14px/1 Inter, Arial, sans-serif;
+        text-decoration: none;
+      }
+
+      .card__link::after {
+        content: "->";
+        transition: transform 180ms ease;
+      }
+
+      .card__link:hover::after,
+      .card__link:focus-visible::after {
+        transform: translateX(2px);
+      }
+
+      .footer {
+        margin-top: 26px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 14px;
+        color: #657285;
+        font: 500 14px/1.6 Inter, Arial, sans-serif;
+      }
+
+      .footer a {
+        color: #263547;
+        font-weight: 700;
+        text-decoration-thickness: 1px;
+      }
+
+      @media (max-width: 980px) {
+        .hero__headline {
+          grid-template-columns: 1fr;
+        }
+
+        .story__lead,
+        .benchmark-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .page {
+          width: min(100vw - 20px, 100%);
+          padding-top: 18px;
+        }
+
+        .hero__panel,
+        .toolbar {
+          padding: 18px;
+        }
+
+        .hero__headline h1 {
+          max-width: 12ch;
+        }
+
+        .toolbar {
+          top: 10px;
+        }
+
+        .card {
+          padding: 18px 18px 18px 22px;
+          border-radius: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <section class="hero__panel">
+          <span class="hero__eyebrow">Pretext EdTech Prototype</span>
+          <div class="hero__headline">
+            <h1>Student apps, laid out like a studio wall.</h1>
+            <div class="hero__lede">
+              <p>
+                This first pass turns PRD 02 into a real artifact: a responsive
+                masonry showcase where card heights are predicted in JavaScript
+                before the cards render.
+              </p>
+              <p>
+                The hot path stays arithmetic-only. Resize the page, change the
+                filters, and the wall relayouts without DOM text measurement.
+              </p>
+            </div>
+          </div>
+          <div class="hero__stats">
+            <div class="stat">
+              <span class="stat__label">Focus</span>
+              <span class="stat__value">PRD 02 MVP</span>
+            </div>
+            <div class="stat">
+              <span class="stat__label">Layout model</span>
+              <span class="stat__value">Precomputed heights</span>
+            </div>
+            <div class="stat">
+              <span class="stat__label">Render strategy</span>
+              <span class="stat__value">Absolute masonry + virtualization</span>
+            </div>
+          </div>
+        </section>
+      </header>
+
+      <section class="toolbar" aria-label="Showcase controls">
+        <div class="toolbar__row">
+          <div class="toolbar__group">
+            <span class="toolbar__label">Filter</span>
+            <div class="toolbar__group" id="filters" role="group" aria-label="Category filters"></div>
+          </div>
+          <div class="toolbar__group">
+            <span class="toolbar__label">Sort</span>
+            <div class="toolbar__group" id="sorts" role="group" aria-label="Sort options"></div>
+          </div>
+        </div>
+        <div class="toolbar__row">
+          <div class="toolbar__meta">
+            <span id="summaryMetric">Loading project wall...</span>
+            <span id="timingMetric">Waiting for fonts + Pretext...</span>
+            <span id="visibleMetric">Virtualization warming up...</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="story" aria-labelledby="timingStoryTitle">
+        <div class="story__lead">
+          <div>
+            <p class="story__eyebrow">What the timing means</p>
+            <h2 id="timingStoryTitle">Responsiveness you can explain at a glance.</h2>
+            <p id="responseSummary">
+              This page measures its own relayout time on your device. Under
+              about 16.7ms usually feels immediate on a 60fps screen.
+            </p>
+            <p class="story__note">
+              The comparison cards below use the upstream Pretext benchmark
+              snapshot from March 28, 2026. They are illustrative context, not
+              a claim that this exact page would hit those numbers without
+              Pretext.
+            </p>
+          </div>
+          <div class="live-budget">
+            <span class="live-budget__label">Measured here</span>
+            <span class="live-budget__value" id="liveRelayoutMs">-- ms</span>
+            <span class="live-budget__caption" id="liveRelayoutLabel">Waiting for first render</span>
+            <div class="live-budget__track" aria-hidden="true">
+              <div class="live-budget__fill" id="liveBudgetFill"></div>
+            </div>
+            <span class="live-budget__foot">16.7ms is one 60fps frame.</span>
+          </div>
+        </div>
+        <div class="benchmark-grid" id="benchmarkGrid"></div>
+        <p class="benchmark-grid__foot">
+          Comparison snapshot only: these rows come from the checked-in upstream
+          benchmark summary and are not a rerun of this exact page on your
+          machine.
+        </p>
+      </section>
+
+      <section class="wall-shell">
+        <div class="status-card" id="statusCard">
+          Preparing fonts and loading the Pretext runtime...
+        </div>
+        <div class="empty-card" id="emptyCard" hidden>
+          No projects match this filter yet.
+        </div>
+        <div class="wall" id="wall" aria-live="polite"></div>
+      </section>
+
+      <footer class="footer">
+        <span>
+          Powered by
+          <a href="https://github.com/chenglou/pretext" target="_blank" rel="noreferrer">
+            Pretext
+          </a>
+          with real DOM text and zero per-card DOM measurement.
+        </span>
+        <span>
+          Next planned follow-up: connect the badge to the PRD 01 explorable once
+          that piece exists.
+        </span>
+      </footer>
+    </div>
+
+    <script type="module">
+      // EDIT THIS SECTION: the showcase content is intentionally plain JSON-like
+      // data so a non-webdev educator can replace it without touching the layout.
+      const PROJECTS = [
+        {
+          name: "Waer",
+          student: "Team Malama",
+          description:
+            "Students earn points for recycling, composting, and lunch waste reduction. The app turns everyday stewardship into a school-wide challenge with rewards.",
+          category: "sustainability",
+          createdAt: "2026-03-18",
+          url: "https://example.com/waer",
+        },
+        {
+          name: "Carnival Scrip Calculator",
+          student: "Justin L.",
+          description:
+            "A tiny utility that predicts exactly how much scrip a family needs before carnival night so nobody gets stuck in the ticket line twice.",
+          category: "utility",
+          createdAt: "2026-03-16",
+          url: "https://example.com/carnival-scrip",
+        },
+        {
+          name: "Follow-Up Friend",
+          student: "Conference Crew",
+          description:
+            "Collect names, notes, and promised next steps during a conference, then copy the whole stack into email or a spreadsheet when the session ends.",
+          category: "productivity",
+          createdAt: "2026-03-21",
+          url: "https://example.com/follow-up-friend",
+        },
+        {
+          name: "Myth Matcher",
+          student: "Period 2 Humanities",
+          description:
+            "Players connect archetypes, symbols, and plot patterns across myths from different cultures while the app explains each match in plain language.",
+          category: "learning",
+          createdAt: "2026-03-14",
+          url: "https://example.com/myth-matcher",
+        },
+        {
+          name: "Lunch Rush",
+          student: "Cafe Builders",
+          description:
+            "A cafeteria simulation game where students tune staffing, menu mix, and prep flow to keep the lunch line moving without wasting food.",
+          category: "game",
+          createdAt: "2026-03-11",
+          url: "https://example.com/lunch-rush",
+        },
+        {
+          name: "Energy Audit Map",
+          student: "Room 11 Science",
+          description:
+            "A campus map that tags lights, AC, and charging hotspots so students can recommend low-cost changes with the biggest environmental impact.",
+          category: "sustainability",
+          createdAt: "2026-03-20",
+          url: "https://example.com/energy-audit-map",
+        },
+        {
+          name: "Advisor Check-In Board",
+          student: "Advisory Lab",
+          description:
+            "Teachers can track one-sentence student goals, quick reflections, and follow-up nudges in a calm single-screen dashboard built for busy mornings.",
+          category: "productivity",
+          createdAt: "2026-03-23",
+          url: "https://example.com/advisor-check-in",
+        },
+        {
+          name: "Field Trip Cost Splitter",
+          student: "Kai and Mira",
+          description:
+            "Calculate transportation, ticket, and food costs per student with instant scenario changes for scholarship support and different bus counts.",
+          category: "utility",
+          createdAt: "2026-03-10",
+          url: "https://example.com/field-trip-cost-splitter",
+        },
+        {
+          name: "Cell Quest",
+          student: "Bio Jam",
+          description:
+            "A fast classroom game where organelles become power-ups. Players race to keep a cell alive while learning what each structure actually does.",
+          category: "game",
+          createdAt: "2026-03-22",
+          url: "https://example.com/cell-quest",
+        },
+        {
+          name: "Internet Journey",
+          student: "Network Narrators",
+          description:
+            "A story-driven explainer that walks students through packets, routers, and requests using tactile sliders and scene-by-scene narration.",
+          category: "learning",
+          createdAt: "2026-03-24",
+          url: "https://example.com/internet-journey",
+        },
+        {
+          name: "Garden Rotation Planner",
+          student: "Greenhouse Guild",
+          description:
+            "Students schedule crops, companion plants, and harvest windows to make a tiny school garden feel like a real systems-thinking project.",
+          category: "sustainability",
+          createdAt: "2026-03-12",
+          url: "https://example.com/garden-rotation",
+        },
+        {
+          name: "Idea Timer Relay",
+          student: "Design Sprint Club",
+          description:
+            "A collaborative timer for quick ideation rounds. Each checkpoint changes the prompt and saves a trail of snapshots for later reflection.",
+          category: "productivity",
+          createdAt: "2026-03-15",
+          url: "https://example.com/idea-timer-relay",
+        },
+        {
+          name: "Trail of Evidence",
+          student: "History Workshop",
+          description:
+            "Players inspect letters, maps, and testimony cards to build the strongest explanation for a historical mystery without guessing blindly.",
+          category: "learning",
+          createdAt: "2026-03-09",
+          url: "https://example.com/trail-of-evidence",
+        },
+        {
+          name: "Snack Cart Sprint",
+          student: "Economics Elective",
+          description:
+            "A balancing game about pricing, demand, and inventory where every round teaches why some choices feel smart now but fail by the end of the day.",
+          category: "game",
+          createdAt: "2026-03-17",
+          url: "https://example.com/snack-cart-sprint",
+        },
+        {
+          name: "Debate Timer Board",
+          student: "Speech and Debate",
+          description:
+            "Track round order, speaking time, and evidence prompts on a projected display that is easier to read than a random phone timer.",
+          category: "utility",
+          createdAt: "2026-03-19",
+          url: "https://example.com/debate-timer-board",
+        },
+      ];
+
+      const CATEGORY_META = {
+        all: { label: "All", color: "#34455d" },
+        sustainability: { label: "Sustainability", color: "#1c9f8a" },
+        utility: { label: "Utility", color: "#dd8d2a" },
+        productivity: { label: "Productivity", color: "#4a76d1" },
+        game: { label: "Game", color: "#d35e55" },
+        learning: { label: "Learning", color: "#8c63c7" },
+      };
+
+      const SORT_OPTIONS = [
+        { id: "newest", label: "Newest first" },
+        { id: "name", label: "Name A-Z" },
+      ];
+
+      const BENCHMARK_SNAPSHOT = [
+        {
+          browser: "Chrome snapshot",
+          pretext: 0.09,
+          domBatch: 4.05,
+          domInterleaved: 43.5,
+        },
+        {
+          browser: "Safari snapshot",
+          pretext: 0.12,
+          domBatch: 87,
+          domInterleaved: 149,
+        },
+      ];
+
+      const FONT_STACK = '"Inter", Arial, sans-serif';
+      const TITLE_FONT = `700 18px ${FONT_STACK}`;
+      const META_FONT = `500 13px ${FONT_STACK}`;
+      const DESCRIPTION_FONT = `400 14px ${FONT_STACK}`;
+      const TITLE_LINE_HEIGHT = 24;
+      const META_LINE_HEIGHT = 18;
+      const DESCRIPTION_LINE_HEIGHT = 22;
+      const CARD_PADDING_X = 20;
+      const CARD_PADDING_Y = 20;
+      const CHIP_HEIGHT = 30;
+      const TITLE_GAP = 14;
+      const META_GAP = 10;
+      const DESCRIPTION_GAP = 14;
+      const FOOTER_GAP = 18;
+      const FOOTER_HEIGHT = 20;
+      const GRID_GAP = 20;
+      const MAX_CARD_WIDTH = 340;
+      const VIRTUAL_BUFFER = 520;
+      const FRAME_BUDGET_MS = 16.7;
+      const BENCHMARK_MAX_MS = Math.max(
+        ...BENCHMARK_SNAPSHOT.flatMap((row) => [
+          row.pretext,
+          row.domBatch,
+          row.domInterleaved,
+        ]),
+      );
+
+      const wallNode = document.getElementById("wall");
+      const filtersNode = document.getElementById("filters");
+      const sortsNode = document.getElementById("sorts");
+      const statusCard = document.getElementById("statusCard");
+      const emptyCard = document.getElementById("emptyCard");
+      const summaryMetric = document.getElementById("summaryMetric");
+      const timingMetric = document.getElementById("timingMetric");
+      const visibleMetric = document.getElementById("visibleMetric");
+      const responseSummary = document.getElementById("responseSummary");
+      const liveRelayoutMs = document.getElementById("liveRelayoutMs");
+      const liveRelayoutLabel = document.getElementById("liveRelayoutLabel");
+      const liveBudgetFill = document.getElementById("liveBudgetFill");
+      const benchmarkGrid = document.getElementById("benchmarkGrid");
+
+      const state = {
+        activeCategory: "all",
+        activeSort: "newest",
+        projects: [],
+        preparedProjects: [],
+        positionedCards: [],
+        colWidth: 0,
+        contentHeight: 0,
+        rafId: null,
+      };
+
+      let prepareText = null;
+      let layoutText = null;
+
+      const escapeHtml = (value) =>
+        value
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+
+      const slugify = (value) =>
+        value
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+
+      const formatMs = (value) =>
+        value >= 100 ? `${value.toFixed(0)}ms` : `${value.toFixed(2)}ms`;
+
+      function benchmarkBarWidth(value) {
+        const width = (Math.log10(value + 1) / Math.log10(BENCHMARK_MAX_MS + 1)) * 100;
+        return `${Math.max(8, width)}%`;
+      }
+
+      function describeResponsiveness(ms) {
+        if (ms < 4) {
+          return {
+            chip: "Feels instant",
+            label: "Feels instant",
+            summary:
+              "The wall updated in less than one animation frame, so resize and filtering should feel immediate.",
+          };
+        }
+
+        if (ms < FRAME_BUDGET_MS) {
+          return {
+            chip: "Should feel smooth",
+            label: "Should feel smooth",
+            summary:
+              "The wall stayed inside a typical 60fps frame budget, so most people should experience it as smooth.",
+          };
+        }
+
+        if (ms < 50) {
+          return {
+            chip: "Starting to feel heavy",
+            label: "Starting to feel heavy",
+            summary:
+              "This is above a single frame budget, so some people may start noticing drag during resize or filtering.",
+          };
+        }
+
+        return {
+          chip: "Noticeably slow",
+          label: "Noticeably slow",
+          summary:
+            "This is slow enough that most people will feel lag, which is exactly the kind of experience this demo is trying to avoid.",
+        };
+      }
+
+      function renderBenchmarkGrid() {
+        benchmarkGrid.innerHTML = BENCHMARK_SNAPSHOT.map((row) => {
+          const ratio = Math.round(row.domInterleaved / row.pretext);
+          return `
+            <article class="benchmark-card">
+              <div>
+                <p class="story__eyebrow">Comparison snapshot</p>
+                <h3>${row.browser}</h3>
+              </div>
+              <div class="benchmark-row">
+                <div class="benchmark-row__head">
+                  <span class="benchmark-row__label">Pretext layout hot path</span>
+                  <span class="benchmark-row__value">${formatMs(row.pretext)}</span>
+                </div>
+                <div class="benchmark-row__track" aria-hidden="true">
+                  <div class="benchmark-row__bar benchmark-row__bar--fast" style="width:${benchmarkBarWidth(row.pretext)}"></div>
+                </div>
+              </div>
+              <div class="benchmark-row">
+                <div class="benchmark-row__head">
+                  <span class="benchmark-row__label">DOM batch measurement</span>
+                  <span class="benchmark-row__value">${formatMs(row.domBatch)}</span>
+                </div>
+                <div class="benchmark-row__track" aria-hidden="true">
+                  <div class="benchmark-row__bar benchmark-row__bar--slow" style="width:${benchmarkBarWidth(row.domBatch)}"></div>
+                </div>
+              </div>
+              <div class="benchmark-row">
+                <div class="benchmark-row__head">
+                  <span class="benchmark-row__label">DOM reads + writes interleaved</span>
+                  <span class="benchmark-row__value">${formatMs(row.domInterleaved)}</span>
+                </div>
+                <div class="benchmark-row__track" aria-hidden="true">
+                  <div class="benchmark-row__bar benchmark-row__bar--slow" style="width:${benchmarkBarWidth(row.domInterleaved)}"></div>
+                </div>
+              </div>
+              <p class="benchmark-card__ratio">
+                In this benchmark, the interleaved DOM path was about ${ratio}x slower than the Pretext layout step.
+              </p>
+            </article>
+          `;
+        }).join("");
+      }
+
+      function buildFilterButtons() {
+        const counts = PROJECTS.reduce((acc, project) => {
+          acc[project.category] = (acc[project.category] || 0) + 1;
+          return acc;
+        }, {});
+
+        const ids = ["all", "sustainability", "utility", "productivity", "game", "learning"];
+        filtersNode.innerHTML = ids
+          .map((id) => {
+            const meta = CATEGORY_META[id];
+            const count = id === "all" ? PROJECTS.length : counts[id] || 0;
+            return `
+              <button
+                type="button"
+                data-filter="${id}"
+                data-active="${id === state.activeCategory}"
+                style="background:${id === state.activeCategory ? meta.color : "var(--button-bg)"}"
+                aria-pressed="${id === state.activeCategory}"
+              >
+                ${meta.label} (${count})
+              </button>
+            `;
+          })
+          .join("");
+      }
+
+      function buildSortButtons() {
+        sortsNode.innerHTML = SORT_OPTIONS.map(
+          (option) => `
+            <button
+              type="button"
+              data-sort="${option.id}"
+              data-active="${option.id === state.activeSort}"
+              style="background:${option.id === state.activeSort ? "#223147" : "var(--button-bg)"}"
+              aria-pressed="${option.id === state.activeSort}"
+            >
+              ${option.label}
+            </button>
+          `,
+        ).join("");
+      }
+
+      async function importPretext() {
+        const candidates = [
+          "https://esm.sh/@chenglou/pretext@0.0.4?bundle",
+          "https://cdn.jsdelivr.net/npm/@chenglou/pretext@0.0.4/+esm",
+        ];
+
+        let lastError = null;
+        for (const url of candidates) {
+          try {
+            return await import(url);
+          } catch (error) {
+            lastError = error;
+          }
+        }
+
+        throw lastError;
+      }
+
+      async function ensureFonts() {
+        if (!("fonts" in document)) return;
+        await Promise.all([
+          document.fonts.load(TITLE_FONT),
+          document.fonts.load(META_FONT),
+          document.fonts.load(DESCRIPTION_FONT),
+          document.fonts.ready,
+        ]);
+      }
+
+      function prepareProjects() {
+        state.preparedProjects = PROJECTS.map((project) => ({
+          ...project,
+          slug: slugify(project.name),
+          titlePrepared: prepareText(project.name, TITLE_FONT),
+          metaPrepared: prepareText(`by ${project.student}`, META_FONT),
+          descriptionPrepared: prepareText(project.description, DESCRIPTION_FONT),
+        }));
+      }
+
+      function getVisibleProjects() {
+        const filtered =
+          state.activeCategory === "all"
+            ? state.preparedProjects.slice()
+            : state.preparedProjects.filter(
+                (project) => project.category === state.activeCategory,
+              );
+
+        if (state.activeSort === "name") {
+          filtered.sort((a, b) => a.name.localeCompare(b.name));
+        } else {
+          filtered.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        }
+
+        return filtered;
+      }
+
+      function getColumnCount(width) {
+        if (width < 480) return 1;
+        if (width < 768) return 2;
+        if (width < 1024) return 3;
+        return 4;
+      }
+
+      function measureTextHeight(prepared, width, lineHeight) {
+        return layoutText(prepared, Math.max(1, width), lineHeight).height;
+      }
+
+      function computeCardHeight(project, cardWidth) {
+        const contentWidth = Math.max(1, cardWidth - CARD_PADDING_X * 2);
+        const titleHeight = measureTextHeight(
+          project.titlePrepared,
+          contentWidth,
+          TITLE_LINE_HEIGHT,
+        );
+        const metaHeight = measureTextHeight(
+          project.metaPrepared,
+          contentWidth,
+          META_LINE_HEIGHT,
+        );
+        const descriptionHeight = measureTextHeight(
+          project.descriptionPrepared,
+          contentWidth,
+          DESCRIPTION_LINE_HEIGHT,
+        );
+
+        const fixedChrome =
+          CARD_PADDING_Y * 2 +
+          CHIP_HEIGHT +
+          TITLE_GAP +
+          META_GAP +
+          DESCRIPTION_GAP +
+          FOOTER_GAP +
+          FOOTER_HEIGHT;
+
+        return fixedChrome + titleHeight + metaHeight + descriptionHeight;
+      }
+
+      function computeLayout() {
+        const projects = getVisibleProjects();
+        const containerWidth = Math.max(1, wallNode.clientWidth || wallNode.parentElement.clientWidth);
+        const colCount = getColumnCount(containerWidth);
+        const rawColWidth = Math.floor((containerWidth - GRID_GAP * (colCount - 1)) / colCount);
+        const colWidth = Math.max(1, Math.min(MAX_CARD_WIDTH, rawColWidth));
+        const contentWidth = colWidth * colCount + GRID_GAP * (colCount - 1);
+        const offsetLeft = Math.max(0, Math.floor((containerWidth - contentWidth) / 2));
+        const colHeights = new Array(colCount).fill(0);
+
+        const positionedCards = projects.map((project) => {
+          let targetColumn = 0;
+          for (let index = 1; index < colHeights.length; index += 1) {
+            if (colHeights[index] < colHeights[targetColumn]) {
+              targetColumn = index;
+            }
+          }
+
+          const height = computeCardHeight(project, colWidth);
+          const positioned = {
+            project,
+            x: offsetLeft + targetColumn * (colWidth + GRID_GAP),
+            y: colHeights[targetColumn],
+            width: colWidth,
+            height,
+          };
+
+          colHeights[targetColumn] += height + GRID_GAP;
+          return positioned;
+        });
+
+        const contentHeight = Math.max(0, ...colHeights) - (projects.length ? GRID_GAP : 0);
+
+        state.projects = projects;
+        state.positionedCards = positionedCards;
+        state.colWidth = colWidth;
+        state.contentHeight = Math.max(contentHeight, 320);
+      }
+
+      function createCardNode(project) {
+        const article = document.createElement("article");
+        article.className = "card";
+        article.dataset.slug = project.slug;
+        return article;
+      }
+
+      function cardMarkup(project) {
+        const category = CATEGORY_META[project.category];
+        return `
+          <span class="card__chip">${escapeHtml(category.label)}</span>
+          <h2 class="card__title">${escapeHtml(project.name)}</h2>
+          <p class="card__meta">${escapeHtml(`by ${project.student}`)}</p>
+          <p class="card__description">${escapeHtml(project.description)}</p>
+          <div class="card__footer">
+            <span class="card__note">${escapeHtml(project.createdAt)}</span>
+            <a class="card__link" href="${escapeHtml(project.url)}" target="_blank" rel="noreferrer">
+              View App
+            </a>
+          </div>
+        `;
+      }
+
+      function syncVisibleCards() {
+        const wallTop = wallNode.getBoundingClientRect().top + window.scrollY;
+        const viewTop = window.scrollY - wallTop - VIRTUAL_BUFFER;
+        const viewBottom = viewTop + window.innerHeight + VIRTUAL_BUFFER * 2;
+        const visibleSlugs = new Set();
+
+        wallNode.style.height = `${state.contentHeight}px`;
+        wallNode.hidden = state.projects.length === 0;
+
+        for (const positioned of state.positionedCards) {
+          const bottom = positioned.y + positioned.height;
+          if (bottom < viewTop || positioned.y > viewBottom) continue;
+
+          visibleSlugs.add(positioned.project.slug);
+          let node = wallNode.querySelector(`[data-slug="${positioned.project.slug}"]`);
+          if (!node) {
+            node = createCardNode(positioned.project);
+            node.innerHTML = cardMarkup(positioned.project);
+            wallNode.appendChild(node);
+          }
+
+          node.style.setProperty("--accent", CATEGORY_META[positioned.project.category].color);
+          node.style.width = `${positioned.width}px`;
+          node.style.height = `${positioned.height}px`;
+          node.style.transform = `translate3d(${positioned.x}px, ${positioned.y}px, 0)`;
+        }
+
+        Array.from(wallNode.children).forEach((node) => {
+          if (!visibleSlugs.has(node.dataset.slug)) {
+            node.remove();
+          }
+        });
+
+        emptyCard.hidden = state.projects.length !== 0;
+        summaryMetric.textContent = `${state.projects.length} projects on the wall`;
+        visibleMetric.textContent = `${visibleSlugs.size} cards currently mounted`;
+        return visibleSlugs.size;
+      }
+
+      function updatePerformanceStory(totalMs, visibleCount) {
+        const description = describeResponsiveness(totalMs);
+        timingMetric.textContent = `${formatMs(totalMs)} relayout - ${description.chip}`;
+        liveRelayoutMs.textContent = formatMs(totalMs);
+        liveRelayoutLabel.textContent = description.label;
+        liveBudgetFill.style.width = `${Math.min(100, (totalMs / FRAME_BUDGET_MS) * 100)}%`;
+        liveBudgetFill.dataset.state = totalMs > FRAME_BUDGET_MS ? "warn" : "ok";
+        responseSummary.innerHTML = `
+          This page just measured a <strong>${formatMs(totalMs)}</strong> relayout on
+          this device while showing <strong>${state.projects.length}</strong> projects
+          and mounting <strong>${visibleCount}</strong> nearby cards. ${description.summary}
+        `;
+      }
+
+      function render() {
+        state.rafId = null;
+        if (!prepareText || !layoutText) return;
+
+        const start = performance.now();
+        computeLayout();
+        const visibleCount = syncVisibleCards();
+        const totalMs = performance.now() - start;
+        updatePerformanceStory(totalMs, visibleCount);
+      }
+
+      function scheduleRender() {
+        if (state.rafId !== null) return;
+        state.rafId = requestAnimationFrame(render);
+      }
+
+      function attachEvents() {
+        filtersNode.addEventListener("click", (event) => {
+          const button = event.target.closest("button[data-filter]");
+          if (!button) return;
+          state.activeCategory = button.dataset.filter;
+          buildFilterButtons();
+          scheduleRender();
+        });
+
+        sortsNode.addEventListener("click", (event) => {
+          const button = event.target.closest("button[data-sort]");
+          if (!button) return;
+          state.activeSort = button.dataset.sort;
+          buildSortButtons();
+          scheduleRender();
+        });
+
+        window.addEventListener("resize", scheduleRender);
+        window.addEventListener("scroll", scheduleRender, { passive: true });
+      }
+
+      async function boot() {
+        buildFilterButtons();
+        buildSortButtons();
+        renderBenchmarkGrid();
+        statusCard.hidden = false;
+        statusCard.textContent = "Preparing fonts and loading the Pretext runtime...";
+
+        try {
+          const pretext = await importPretext();
+          prepareText = pretext.prepare;
+          layoutText = pretext.layout;
+
+          await ensureFonts();
+          prepareProjects();
+          attachEvents();
+
+          statusCard.hidden = true;
+          scheduleRender();
+        } catch (error) {
+          statusCard.hidden = false;
+          statusCard.textContent =
+            "Could not load Pretext from the CDN. Check your internet connection or swap the import URL in the file.";
+          timingMetric.textContent = "Pretext failed to load";
+          visibleMetric.textContent = "No cards mounted";
+          console.error(error);
+        }
+      }
+
+      boot();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Upstream reference clone — not part of this repo.
+# Clone separately: git clone https://github.com/chenglou/pretext upstream/chenglou-pretext
+upstream/
+
+# Test artifacts
+experiments/tests/node_modules/
+experiments/tests/test-results/
+experiments/tests/playwright-report/
+
+# Claude Code local settings (launch.json is checked in; local overrides are not)
+.claude/settings.local.json

@@ -1,0 +1,2127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Socratic Chat Shrinkwrap Prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --page-bg: #f6efe5;
+        --page-ink: #1d2530;
+        --muted: #607084;
+        --line: rgba(44, 57, 76, 0.1);
+        --panel: rgba(255, 252, 247, 0.84);
+        --panel-strong: rgba(255, 255, 255, 0.92);
+        --shadow: 0 22px 54px rgba(38, 48, 63, 0.08);
+        --radius-xl: 30px;
+        --radius-lg: 24px;
+        --radius-md: 18px;
+        --site-width: min(1400px, calc(100vw - 32px));
+        --topic-accent: #2e6de0;
+        --topic-accent-soft: rgba(46, 109, 224, 0.12);
+        --topic-good: #16866d;
+        --topic-warn: #d56a56;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--page-ink);
+        font-family: "Inter", Arial, sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(84, 168, 255, 0.16), transparent 28%),
+          radial-gradient(circle at top right, rgba(255, 175, 104, 0.16), transparent 24%),
+          linear-gradient(180deg, #fff9f0 0%, #f7efe5 48%, #f1e7db 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(29, 37, 48, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(29, 37, 48, 0.03) 1px, transparent 1px);
+        background-size: 22px 22px;
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.22), transparent 70%);
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .page {
+        width: var(--site-width);
+        margin: 0 auto;
+        padding: 28px 0 72px;
+      }
+
+      .hero {
+        display: grid;
+        gap: 20px;
+      }
+
+      .hero__panel {
+        display: grid;
+        gap: 18px;
+        padding: 28px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        background: var(--panel);
+        backdrop-filter: blur(18px);
+        box-shadow: var(--shadow);
+      }
+
+      .hero__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: #506072;
+        font: 700 12px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .hero__eyebrow::before {
+        content: "";
+        width: 42px;
+        height: 1px;
+        background: linear-gradient(90deg, var(--topic-accent), rgba(46, 109, 224, 0));
+      }
+
+      .hero__grid {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+      }
+
+      .hero__copy h1 {
+        margin: 0;
+        font-family: "Fraunces", Georgia, serif;
+        font-size: clamp(2.5rem, 5vw, 5.2rem);
+        line-height: 0.92;
+        letter-spacing: -0.05em;
+        max-width: 11ch;
+      }
+
+      .hero__copy p {
+        max-width: 64ch;
+        margin: 16px 0 0;
+        color: var(--muted);
+        font: 400 16px/1.7 Inter, Arial, sans-serif;
+      }
+
+      .hero__meta {
+        display: grid;
+        gap: 14px;
+      }
+
+      .meta-card {
+        padding: 18px;
+        border: 1px solid rgba(44, 57, 76, 0.08);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.82);
+      }
+
+      .meta-card__label {
+        display: block;
+        margin-bottom: 6px;
+        color: #718096;
+        font: 700 11px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .meta-card__value {
+        display: block;
+        font: 700 22px/1.1 Inter, Arial, sans-serif;
+      }
+
+      .meta-card p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font: 400 14px/1.6 Inter, Arial, sans-serif;
+      }
+
+      .controls {
+        position: sticky;
+        top: 16px;
+        z-index: 20;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-top: 24px;
+        padding: 18px 20px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: rgba(255, 252, 247, 0.88);
+        backdrop-filter: blur(16px);
+        box-shadow: 0 16px 38px rgba(38, 48, 63, 0.07);
+      }
+
+      .topic-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .topic-tabs button,
+      .toggle {
+        border: 1px solid rgba(44, 57, 76, 0.12);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.86);
+      }
+
+      .topic-tabs button {
+        appearance: none;
+        padding: 11px 15px;
+        color: #2b3748;
+        cursor: pointer;
+        font: 600 14px/1 Inter, Arial, sans-serif;
+        transition:
+          transform 160ms ease,
+          box-shadow 160ms ease,
+          border-color 160ms ease,
+          background-color 160ms ease,
+          color 160ms ease;
+      }
+
+      .topic-tabs button:hover,
+      .topic-tabs button:focus-visible {
+        transform: translateY(-1px);
+        outline: none;
+        box-shadow: 0 10px 24px rgba(38, 48, 63, 0.11);
+      }
+
+      .topic-tabs button[data-active="true"] {
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 12px 28px rgba(38, 48, 63, 0.16);
+      }
+
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        color: #415062;
+        font: 600 14px/1.4 Inter, Arial, sans-serif;
+      }
+
+      .toggle input {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--topic-accent);
+      }
+
+      .workspace {
+        display: grid;
+        gap: 24px;
+        grid-template-columns: minmax(0, 1.06fr) minmax(300px, 0.82fr);
+        margin-top: 24px;
+      }
+
+      .phone {
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        min-height: 760px;
+        border: 1px solid rgba(44, 57, 76, 0.08);
+        border-radius: 34px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(249, 246, 241, 0.98));
+        box-shadow: 0 28px 72px rgba(33, 43, 58, 0.12);
+        overflow: hidden;
+      }
+
+      .phone__bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 18px 20px 16px;
+        border-bottom: 1px solid rgba(44, 57, 76, 0.08);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 250, 244, 0.86));
+      }
+
+      .phone__eyebrow {
+        display: block;
+        margin-bottom: 4px;
+        color: #6c7a8e;
+        font: 700 11px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .phone__title {
+        display: block;
+        font: 700 20px/1.15 Inter, Arial, sans-serif;
+      }
+
+      .mode-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 12px;
+        border-radius: 999px;
+        background: var(--topic-accent-soft);
+        color: var(--topic-accent);
+        font: 700 13px/1 Inter, Arial, sans-serif;
+      }
+
+      .mode-badge::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .status-banner {
+        margin: 14px 18px 0;
+        padding: 14px 16px;
+        border: 1px solid rgba(44, 57, 76, 0.1);
+        border-radius: 18px;
+        background: rgba(248, 250, 255, 0.86);
+        color: #516074;
+        font: 500 14px/1.6 Inter, Arial, sans-serif;
+      }
+
+      .status-banner[hidden] {
+        display: none;
+      }
+
+      .thread {
+        position: relative;
+        overflow-y: auto;
+        padding: 18px;
+        background:
+          radial-gradient(circle at top left, rgba(46, 109, 224, 0.08), transparent 26%),
+          linear-gradient(180deg, #fcfaf7 0%, #f8f3ec 100%);
+      }
+
+      .msg-row {
+        display: flex;
+        margin-bottom: 12px;
+      }
+
+      .msg-row--left {
+        justify-content: flex-start;
+      }
+
+      .msg-row--right {
+        justify-content: flex-end;
+      }
+
+      .msg-row--center {
+        justify-content: center;
+      }
+
+      .msg-row--full {
+        justify-content: stretch;
+      }
+
+      .msg {
+        animation: rise 280ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .msg__cluster {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+      }
+
+      .avatar {
+        flex: none;
+        display: inline-grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: rgba(44, 57, 76, 0.08);
+        color: #46576b;
+        font: 700 16px/1 Inter, Arial, sans-serif;
+      }
+
+      .avatar--hidden {
+        visibility: hidden;
+      }
+
+      .bubble {
+        position: relative;
+        overflow: hidden;
+        padding: 10px 14px;
+        border: 1px solid rgba(44, 57, 76, 0.08);
+        border-radius: 18px;
+        color: #24303f;
+        box-shadow: 0 12px 28px rgba(38, 48, 63, 0.06);
+      }
+
+      .bubble--tutor {
+        border-bottom-left-radius: 6px;
+        background: rgba(255, 255, 255, 0.95);
+        font: 500 15px/20px Inter, Arial, sans-serif;
+      }
+
+      .bubble--choice {
+        border-bottom-right-radius: 6px;
+        background:
+          linear-gradient(180deg, color-mix(in srgb, var(--topic-accent) 18%, white), color-mix(in srgb, var(--topic-accent) 10%, white));
+        color: #233142;
+        font: 600 15px/20px Inter, Arial, sans-serif;
+      }
+
+      .bubble--choice[aria-pressed="true"] {
+        border-color: rgba(44, 57, 76, 0.02);
+        box-shadow: 0 14px 30px rgba(38, 48, 63, 0.12);
+      }
+
+      .bubble--choice[data-correct="true"] {
+        background:
+          linear-gradient(180deg, rgba(22, 134, 109, 0.16), rgba(22, 134, 109, 0.1));
+      }
+
+      .bubble--choice[data-wrong="true"] {
+        background:
+          linear-gradient(180deg, rgba(213, 106, 86, 0.14), rgba(213, 106, 86, 0.08));
+      }
+
+      .bubble--reaction {
+        border-radius: 999px;
+        font: 700 13px/18px Inter, Arial, sans-serif;
+        letter-spacing: 0.01em;
+      }
+
+      .bubble--reaction[data-tone="good"] {
+        background: rgba(22, 134, 109, 0.12);
+        color: #0e6c58;
+      }
+
+      .bubble--reaction[data-tone="warn"] {
+        background: rgba(213, 106, 86, 0.12);
+        color: #9c4637;
+      }
+
+      .bubble--css::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: calc(var(--waste-width, 0) * 1px);
+        background: linear-gradient(90deg, rgba(255, 79, 145, 0.04), rgba(255, 79, 145, 0.22));
+        border-left: 1px dashed rgba(255, 79, 145, 0.38);
+        pointer-events: none;
+      }
+
+      .choice-stack {
+        display: grid;
+        gap: 8px;
+        justify-items: end;
+      }
+
+      .choice-button {
+        appearance: none;
+        cursor: pointer;
+        text-align: left;
+        transition: transform 160ms ease, box-shadow 160ms ease;
+      }
+
+      .choice-button:hover,
+      .choice-button:focus-visible {
+        transform: translateY(-1px);
+        outline: none;
+      }
+
+      .choice-button[disabled] {
+        cursor: default;
+      }
+
+      .typing {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border: 1px solid rgba(44, 57, 76, 0.08);
+        border-radius: 18px 18px 18px 6px;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 12px 28px rgba(38, 48, 63, 0.06);
+      }
+
+      .typing span {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(76, 92, 112, 0.72);
+        animation: pulse 1s infinite ease-in-out;
+      }
+
+      .typing span:nth-child(2) {
+        animation-delay: 0.12s;
+      }
+
+      .typing span:nth-child(3) {
+        animation-delay: 0.24s;
+      }
+
+      .widget {
+        width: 100%;
+      }
+
+      .widget-card {
+        width: 100%;
+        padding: 18px;
+        border: 1px solid rgba(44, 57, 76, 0.08);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 14px 30px rgba(38, 48, 63, 0.06);
+      }
+
+      .widget-card__eyebrow {
+        display: block;
+        margin-bottom: 10px;
+        color: #6b7a8e;
+        font: 700 11px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .widget-card h3 {
+        margin: 0;
+        font: 700 20px/1.15 Inter, Arial, sans-serif;
+      }
+
+      .widget-card p {
+        margin: 10px 0 0;
+        color: var(--muted);
+        font: 400 14px/1.6 Inter, Arial, sans-serif;
+      }
+
+      .equation-chip,
+      .route-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(44, 57, 76, 0.06);
+        color: #283445;
+        font: 700 15px/1.2 Inter, Arial, sans-serif;
+      }
+
+      .slider-block {
+        display: grid;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .slider-block input[type="range"] {
+        width: 100%;
+        accent-color: var(--topic-accent);
+      }
+
+      .widget-result {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin-top: 14px;
+        color: #2c394d;
+        font: 600 14px/1.5 Inter, Arial, sans-serif;
+      }
+
+      .widget-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: rgba(44, 57, 76, 0.06);
+      }
+
+      .packet-grid {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        margin-top: 16px;
+      }
+
+      .packet-node {
+        appearance: none;
+        min-height: 52px;
+        padding: 12px;
+        border: 1px solid rgba(44, 57, 76, 0.12);
+        border-radius: 18px;
+        background: rgba(252, 252, 255, 0.92);
+        color: #243246;
+        cursor: pointer;
+        font: 700 14px/1.3 Inter, Arial, sans-serif;
+        transition: transform 160ms ease, box-shadow 160ms ease;
+      }
+
+      .packet-node:hover,
+      .packet-node:focus-visible {
+        transform: translateY(-1px);
+        outline: none;
+        box-shadow: 0 10px 22px rgba(38, 48, 63, 0.08);
+      }
+
+      .packet-node[disabled] {
+        opacity: 0.62;
+        cursor: default;
+      }
+
+      .route-progress {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      .reorder-list {
+        display: grid;
+        gap: 10px;
+        margin: 16px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .reorder-item {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 14px;
+        border: 1px solid rgba(44, 57, 76, 0.12);
+        border-radius: 18px;
+        background: rgba(252, 252, 255, 0.94);
+      }
+
+      .reorder-item[draggable="true"] {
+        cursor: grab;
+      }
+
+      .reorder-handle {
+        color: #8a96a7;
+        font: 700 18px/1 Inter, Arial, sans-serif;
+      }
+
+      .reorder-label {
+        font: 700 14px/1.35 Inter, Arial, sans-serif;
+      }
+
+      .reorder-actions {
+        display: inline-flex;
+        gap: 6px;
+      }
+
+      .reorder-actions button {
+        appearance: none;
+        width: 34px;
+        height: 34px;
+        border: 1px solid rgba(44, 57, 76, 0.12);
+        border-radius: 999px;
+        background: white;
+        color: #314156;
+        cursor: pointer;
+        font: 700 14px/1 Inter, Arial, sans-serif;
+      }
+
+      .reorder-actions button[disabled] {
+        opacity: 0.44;
+        cursor: default;
+      }
+
+      .widget-tip {
+        margin-top: 14px;
+        color: #728196;
+        font: 500 13px/1.6 Inter, Arial, sans-serif;
+      }
+
+      .phone__hint {
+        padding: 14px 18px 18px;
+        border-top: 1px solid rgba(44, 57, 76, 0.08);
+        color: #617185;
+        font: 500 13px/1.6 Inter, Arial, sans-serif;
+        background: rgba(255, 252, 248, 0.88);
+      }
+
+      .side {
+        display: grid;
+        gap: 16px;
+        align-content: start;
+      }
+
+      .note-card {
+        padding: 20px;
+        border: 1px solid rgba(44, 57, 76, 0.08);
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.88);
+        box-shadow: 0 14px 30px rgba(38, 48, 63, 0.05);
+      }
+
+      .note-card--accent {
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 252, 255, 0.9));
+      }
+
+      .note-card__eyebrow {
+        display: block;
+        margin-bottom: 10px;
+        color: #6c7a8e;
+        font: 700 11px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .note-card h2,
+      .note-card h3 {
+        margin: 0;
+        font: 700 22px/1.1 Inter, Arial, sans-serif;
+      }
+
+      .note-card p {
+        margin: 10px 0 0;
+        color: var(--muted);
+        font: 400 14px/1.65 Inter, Arial, sans-serif;
+      }
+
+      .metric-big {
+        display: block;
+        margin-top: 6px;
+        font: 800 clamp(2rem, 4vw, 3rem)/0.96 Inter, Arial, sans-serif;
+        letter-spacing: -0.05em;
+      }
+
+      .metric-good {
+        color: var(--topic-good);
+      }
+
+      .metric-warn {
+        color: var(--topic-warn);
+      }
+
+      .progress-track {
+        height: 10px;
+        overflow: hidden;
+        margin-top: 14px;
+        border-radius: 999px;
+        background: rgba(44, 57, 76, 0.08);
+      }
+
+      .progress-fill {
+        display: block;
+        height: 100%;
+        width: 0;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--topic-accent), color-mix(in srgb, var(--topic-accent) 64%, white));
+        transition: width 200ms ease;
+      }
+
+      .hint-list {
+        display: grid;
+        gap: 8px;
+        margin: 14px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .hint-list li {
+        color: #526173;
+        font: 500 14px/1.5 Inter, Arial, sans-serif;
+      }
+
+      .footer {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 14px;
+        margin-top: 24px;
+        color: #667487;
+        font: 500 14px/1.6 Inter, Arial, sans-serif;
+      }
+
+      .footer a {
+        font-weight: 700;
+        text-decoration-thickness: 1px;
+      }
+
+      @keyframes pulse {
+        0%,
+        80%,
+        100% {
+          transform: scale(0.7);
+          opacity: 0.55;
+        }
+        40% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 1100px) {
+        .hero__grid,
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .page {
+          width: min(100vw - 20px, 100%);
+          padding-top: 18px;
+        }
+
+        .hero__panel,
+        .controls,
+        .phone__bar,
+        .phone__hint,
+        .status-banner,
+        .note-card {
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+
+        .thread {
+          padding: 14px;
+        }
+
+        .phone {
+          min-height: 680px;
+          border-radius: 26px;
+        }
+
+        .hero__copy h1 {
+          max-width: 10ch;
+        }
+
+        .controls {
+          top: 10px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        .msg,
+        .typing span,
+        .topic-tabs button,
+        .choice-button,
+        .packet-node,
+        .progress-fill,
+        .bubble--css::after {
+          animation: none;
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <section class="hero__panel">
+          <span class="hero__eyebrow">PRD 03 Prototype</span>
+          <div class="hero__grid">
+            <div class="hero__copy">
+              <h1>Socratic chat with real shrinkwrapped bubbles.</h1>
+              <p>
+                This prototype turns a learning guide into a paced conversation.
+                The key visual trick is subtle but real: message bubbles hug
+                their multiline text tightly instead of carrying the usual dead
+                space that CSS leaves behind.
+              </p>
+            </div>
+            <div class="hero__meta">
+              <div class="meta-card">
+                <span class="meta-card__label">Core Pretext APIs</span>
+                <span class="meta-card__value">prepareWithSegments + walkLineRanges</span>
+                <p>The chat reuses line metrics instead of asking the DOM how big every message became.</p>
+              </div>
+              <div class="meta-card">
+                <span class="meta-card__label">First-pass Scope</span>
+                <span class="meta-card__value">3 editable topic templates</span>
+                <p>Each topic demonstrates progressive reveal, choices, and a lightweight inline widget.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </header>
+
+      <section class="controls" aria-label="Lesson controls">
+        <div class="topic-tabs" id="topicTabs" role="group" aria-label="Topics"></div>
+        <label class="toggle" for="compareToggle">
+          <input type="checkbox" id="compareToggle" />
+          Show CSS comparison
+        </label>
+      </section>
+
+      <main class="workspace">
+        <section class="phone" aria-label="Learning chat demo">
+          <div class="phone__bar">
+            <div>
+              <span class="phone__eyebrow">Current lesson</span>
+              <span class="phone__title" id="phoneTitle">Loading lesson...</span>
+            </div>
+            <span class="mode-badge" id="modeBadge">Loading</span>
+          </div>
+          <div class="status-banner" id="statusBanner">
+            Loading fonts and the Pretext runtime...
+          </div>
+          <div class="thread" id="thread" aria-live="polite"></div>
+          <div class="phone__hint" id="progressHint">
+            Tap the current interaction to reveal the next stretch of the conversation.
+          </div>
+        </section>
+
+        <aside class="side">
+          <section class="note-card">
+            <span class="note-card__eyebrow">Topic lens</span>
+            <h2 id="sideTitle">Loading topic...</h2>
+            <p id="sideSummary">
+              This side panel updates with the active topic and the current display mode.
+            </p>
+          </section>
+
+          <section class="note-card note-card--accent">
+            <span class="note-card__eyebrow">Shrinkwrap difference</span>
+            <span class="metric-big metric-good" id="savedPixels">-- px</span>
+            <p id="savedPixelsLabel">
+              Waiting to measure visible message bubbles.
+            </p>
+            <p id="modeExplain">
+              When the comparison toggle is on, pink overlays mark empty bubble width that CSS fit-content would leave behind.
+            </p>
+          </section>
+
+          <section class="note-card">
+            <span class="note-card__eyebrow">Progress</span>
+            <h3 id="progressTitle">0 of 0 steps revealed</h3>
+            <div class="progress-track" aria-hidden="true">
+              <span class="progress-fill" id="progressFill"></span>
+            </div>
+            <p id="progressCopy">The lesson reveals in batches until the next choice or widget asks for input.</p>
+            <ul class="hint-list">
+              <li>Toggle the comparison mode to see the same lines with looser CSS sizing.</li>
+              <li>Desktop: drag reorder cards in the design-thinking topic. Mobile: use the arrow buttons.</li>
+              <li>The editable content lives in one data object at the top of the script.</li>
+            </ul>
+          </section>
+        </aside>
+      </main>
+
+      <footer class="footer">
+        <span>
+          Powered by
+          <a href="https://github.com/chenglou/pretext" target="_blank" rel="noreferrer">Pretext</a>
+          with real DOM text, not canvas.
+        </span>
+        <span>
+          Next likely move after this prototype: build PRD 01 so these measurements can explain themselves.
+        </span>
+      </footer>
+    </div>
+
+    <script type="module">
+      // EDIT THIS SECTION: topic content only. The chat engine below is generic.
+      const TOPICS = {
+        equations: {
+          label: "Two-step equations",
+          accent: "#2e6de0",
+          summary:
+            "A math lesson framed as a calm text exchange. The widget asks learners to test values until the equation becomes true.",
+          steps: [
+            {
+              id: "eq-1",
+              type: "tutor",
+              text: "Hey. Let's solve 2x + 4 = 10 together without rushing the logic.",
+            },
+            {
+              id: "eq-2",
+              type: "tutor",
+              text: "If the goal is to get x alone, what is the first thing you would undo?",
+            },
+            {
+              id: "eq-choice",
+              type: "choice",
+              success: "Nice. Subtracting 4 first clears the constant term.",
+              options: [
+                {
+                  id: "eq-choice-a",
+                  text: "Subtract 4 from both sides",
+                  correct: true,
+                },
+                {
+                  id: "eq-choice-b",
+                  text: "Divide both sides by 2 immediately",
+                  correct: false,
+                  feedback:
+                    "That can work later, but it is cleaner to undo the +4 first.",
+                },
+                {
+                  id: "eq-choice-c",
+                  text: "Add 4 to both sides",
+                  correct: false,
+                  feedback:
+                    "Adding 4 moves us farther from isolating x. Try undoing the existing +4 instead.",
+                },
+              ],
+            },
+            {
+              id: "eq-3",
+              type: "tutor",
+              text: "Exactly. Now the equation becomes 2x = 6, which is much easier to test.",
+            },
+            {
+              id: "eq-4",
+              type: "tutor",
+              text: "Drag the slider until both sides match.",
+            },
+            {
+              id: "eq-widget",
+              type: "widget",
+              widget: "equation-slider",
+              success: "Correct. When x = 3, 2x + 4 becomes 10.",
+              config: {
+                equation: "2x + 4 = 10",
+                reducedEquation: "2x = 6",
+                min: 0,
+                max: 10,
+                answer: 3,
+              },
+            },
+            {
+              id: "eq-5",
+              type: "tutor",
+              text: "That is the rhythm: undo what is furthest from x, then finish the isolation.",
+            },
+            {
+              id: "eq-6",
+              type: "tutor",
+              text: "A chat format slows the pace just enough that each move can feel deliberate instead of magical.",
+            },
+          ],
+        },
+        internet: {
+          label: "How the internet works",
+          accent: "#118a74",
+          summary:
+            "A network lesson with a simple route widget. The topic focuses on the idea of hops instead of one giant leap from laptop to server.",
+          steps: [
+            {
+              id: "net-1",
+              type: "tutor",
+              text: "When you open a website, your request does not teleport straight to the destination server.",
+            },
+            {
+              id: "net-2",
+              type: "tutor",
+              text: "Which stop is most likely first for a home or school device?",
+            },
+            {
+              id: "net-choice",
+              type: "choice",
+              success: "Right. A nearby router is usually the first obvious handoff.",
+              options: [
+                {
+                  id: "net-choice-a",
+                  text: "It jumps directly to the final server",
+                  correct: false,
+                  feedback:
+                    "Usually there is at least one nearby network hop before the wider internet takes over.",
+                },
+                {
+                  id: "net-choice-b",
+                  text: "It usually reaches a router first",
+                  correct: true,
+                },
+                {
+                  id: "net-choice-c",
+                  text: "It goes to the screen that will display it",
+                  correct: false,
+                  feedback:
+                    "The screen shows the result later, but it is not a network stop for the request itself.",
+                },
+              ],
+            },
+            {
+              id: "net-3",
+              type: "tutor",
+              text: "Exactly. Routers help move packets step by step instead of needing the whole trip in one move.",
+            },
+            {
+              id: "net-4",
+              type: "tutor",
+              text: "Tap the route in order to send this packet.",
+            },
+            {
+              id: "net-widget",
+              type: "widget",
+              widget: "packet-route",
+              success: "Yes. Laptop, then router, then server is the path this toy model wants.",
+              config: {
+                choices: ["Laptop", "Screen", "Router", "Server"],
+                target: ["Laptop", "Router", "Server"],
+              },
+            },
+            {
+              id: "net-5",
+              type: "tutor",
+              text: "Each hop only needs the next best destination. That local decision-making is part of what makes the internet resilient.",
+            },
+            {
+              id: "net-6",
+              type: "tutor",
+              text: "Even this tiny widget works better in chat than in a bulleted handout because the pacing matches the idea of passing along a request.",
+            },
+          ],
+        },
+        design: {
+          label: "Design thinking loop",
+          accent: "#9a5fe5",
+          summary:
+            "A general learning topic with a reorder widget. The lesson emphasizes that the process is a loop, not a rigid staircase.",
+          steps: [
+            {
+              id: "des-1",
+              type: "tutor",
+              text: "Design thinking is easiest to remember when you treat it like a loop rather than a rigid staircase.",
+            },
+            {
+              id: "des-2",
+              type: "tutor",
+              text: "After you define the problem, which phase usually comes next?",
+            },
+            {
+              id: "des-choice",
+              type: "choice",
+              success: "Yes. Ideate opens the option space before you build anything.",
+              options: [
+                {
+                  id: "des-choice-a",
+                  text: "Prototype immediately",
+                  correct: false,
+                  feedback:
+                    "Prototyping comes soon, but ideation usually gives you multiple paths to test first.",
+                },
+                {
+                  id: "des-choice-b",
+                  text: "Ideate",
+                  correct: true,
+                },
+                {
+                  id: "des-choice-c",
+                  text: "Test with users",
+                  correct: false,
+                  feedback:
+                    "Testing matters later, once there is something concrete to put in front of people.",
+                },
+              ],
+            },
+            {
+              id: "des-3",
+              type: "tutor",
+              text: "Nice. Now reorder the phases into a sensible learning loop.",
+            },
+            {
+              id: "des-widget",
+              type: "widget",
+              widget: "reorder-steps",
+              success: "That order works. The important idea is that testing can send you back to any earlier phase.",
+              config: {
+                items: ["Prototype", "Empathize", "Test", "Define", "Ideate"],
+                target: ["Empathize", "Define", "Ideate", "Prototype", "Test"],
+              },
+            },
+            {
+              id: "des-4",
+              type: "tutor",
+              text: "Exactly. The last phase is not the end of the story. Good testing often sends you back to empathy or define.",
+            },
+            {
+              id: "des-5",
+              type: "tutor",
+              text: "This topic works well in chat because each turn can push one notch up the ladder: intuition, then labels, then the full loop.",
+            },
+          ],
+        },
+      };
+
+      const MESSAGE_STYLES = {
+        tutor: {
+          font: '500 15px "Inter", Arial, sans-serif',
+          lineHeight: 20,
+          padX: 14,
+          padY: 10,
+          maxRatio: 0.78,
+        },
+        choice: {
+          font: '600 15px "Inter", Arial, sans-serif',
+          lineHeight: 20,
+          padX: 14,
+          padY: 10,
+          maxRatio: 0.74,
+        },
+        reaction: {
+          font: '700 13px "Inter", Arial, sans-serif',
+          lineHeight: 18,
+          padX: 10,
+          padY: 8,
+          maxRatio: 0.52,
+        },
+      };
+
+      const TYPE_DELAY_MS = 360;
+      const REVEAL_DELAY_MS = 420;
+
+      const topicTabs = document.getElementById("topicTabs");
+      const compareToggle = document.getElementById("compareToggle");
+      const statusBanner = document.getElementById("statusBanner");
+      const thread = document.getElementById("thread");
+      const phoneTitle = document.getElementById("phoneTitle");
+      const modeBadge = document.getElementById("modeBadge");
+      const progressHint = document.getElementById("progressHint");
+      const sideTitle = document.getElementById("sideTitle");
+      const sideSummary = document.getElementById("sideSummary");
+      const savedPixels = document.getElementById("savedPixels");
+      const savedPixelsLabel = document.getElementById("savedPixelsLabel");
+      const modeExplain = document.getElementById("modeExplain");
+      const progressTitle = document.getElementById("progressTitle");
+      const progressFill = document.getElementById("progressFill");
+      const progressCopy = document.getElementById("progressCopy");
+
+      const state = {
+        pretext: null,
+        topicsPrepared: null,
+        activeTopicId: "equations",
+        compareMode: "pretext",
+        revealedCount: 0,
+        typing: false,
+        choiceState: {},
+        widgetState: {},
+        pendingScroll: false,
+        rafId: null,
+        revealToken: 0,
+        dragState: null,
+        seenStepIds: new Set(),
+      };
+
+      function escapeHtml(value) {
+        return value
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function currentTopic() {
+        return state.topicsPrepared[state.activeTopicId];
+      }
+
+      function queueRender(scroll = false) {
+        if (scroll) state.pendingScroll = true;
+        if (state.rafId !== null) return;
+        state.rafId = requestAnimationFrame(() => {
+          state.rafId = null;
+          render();
+        });
+      }
+
+      function scrollThreadToBottom() {
+        thread.scrollTo({
+          top: thread.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+
+      function setTheme(accent) {
+        document.documentElement.style.setProperty("--topic-accent", accent);
+        document.documentElement.style.setProperty(
+          "--topic-accent-soft",
+          `color-mix(in srgb, ${accent} 16%, white)`,
+        );
+      }
+
+      function importPretext() {
+        const urls = [
+          "https://esm.sh/@chenglou/pretext@0.0.4?bundle",
+          "https://cdn.jsdelivr.net/npm/@chenglou/pretext@0.0.4/+esm",
+        ];
+
+        return urls.reduce(
+          async (previous, url) => {
+            try {
+              return await previous;
+            } catch (_error) {
+              return import(url);
+            }
+          },
+          Promise.reject(new Error("No Pretext CDN candidates tried yet.")),
+        );
+      }
+
+      async function waitForFonts() {
+        if (!("fonts" in document)) return;
+        const fontsToLoad = Object.values(MESSAGE_STYLES).map(style => style.font);
+        await Promise.all([...fontsToLoad.map(font => document.fonts.load(font)), document.fonts.ready]);
+      }
+
+      function prepareTopics(pretext) {
+        const reactionCache = new Map();
+
+        function prepareReaction(text) {
+          const key = `${MESSAGE_STYLES.reaction.font}|${text}`;
+          if (reactionCache.has(key)) return reactionCache.get(key);
+          const prepared = pretext.prepareWithSegments(text, MESSAGE_STYLES.reaction.font);
+          reactionCache.set(key, prepared);
+          return prepared;
+        }
+
+        return Object.fromEntries(
+          Object.entries(TOPICS).map(([topicId, topic]) => [
+            topicId,
+            {
+              ...topic,
+              steps: topic.steps.map(step => {
+                if (step.type === "tutor") {
+                  return {
+                    ...step,
+                    prepared: pretext.prepareWithSegments(step.text, MESSAGE_STYLES.tutor.font),
+                  };
+                }
+
+                if (step.type === "choice") {
+                  return {
+                    ...step,
+                    successPrepared: prepareReaction(step.success),
+                    options: step.options.map(option => ({
+                      ...option,
+                      prepared: pretext.prepareWithSegments(option.text, MESSAGE_STYLES.choice.font),
+                      feedbackPrepared: option.feedback ? prepareReaction(option.feedback) : null,
+                    })),
+                  };
+                }
+
+                if (step.type === "widget") {
+                  return {
+                    ...step,
+                    successPrepared: prepareReaction(step.success),
+                  };
+                }
+
+                return step;
+              }),
+              prepareReaction,
+            },
+          ]),
+        );
+      }
+
+      function collectWrapMetrics(prepared, maxWidth, lineHeight) {
+        let maxLineWidth = 0;
+        const lineCount = state.pretext.walkLineRanges(prepared, maxWidth, line => {
+          if (line.width > maxLineWidth) maxLineWidth = line.width;
+        });
+        return {
+          lineCount,
+          height: lineCount * lineHeight,
+          maxLineWidth,
+        };
+      }
+
+      function findTightWrapMetrics(prepared, maxWidth, lineHeight) {
+        const initial = collectWrapMetrics(prepared, maxWidth, lineHeight);
+        let lo = 1;
+        let hi = Math.max(1, Math.ceil(maxWidth));
+
+        while (lo < hi) {
+          const mid = Math.floor((lo + hi) / 2);
+          const lineCount = state.pretext.layout(prepared, mid, lineHeight).lineCount;
+          if (lineCount <= initial.lineCount) {
+            hi = mid;
+          } else {
+            lo = mid + 1;
+          }
+        }
+
+        return collectWrapMetrics(prepared, lo, lineHeight);
+      }
+
+      function measureBubble(prepared, styleKey, availableWidth) {
+        const style = MESSAGE_STYLES[styleKey];
+        const bubbleMaxWidth = Math.max(72, Math.floor(availableWidth * style.maxRatio));
+        const contentMaxWidth = Math.max(36, bubbleMaxWidth - style.padX * 2);
+        const cssMetrics = collectWrapMetrics(prepared, contentMaxWidth, style.lineHeight);
+        const tightMetrics = findTightWrapMetrics(prepared, contentMaxWidth, style.lineHeight);
+        const cssWidth = Math.ceil(cssMetrics.maxLineWidth) + style.padX * 2;
+        const tightWidth = Math.ceil(tightMetrics.maxLineWidth) + style.padX * 2;
+        const height = tightMetrics.height + style.padY * 2;
+        return {
+          cssWidth,
+          tightWidth,
+          wasteWidth: Math.max(0, cssWidth - tightWidth),
+          wastedPixels: Math.max(0, cssWidth - tightWidth) * height,
+        };
+      }
+
+      function buildTopicTabs() {
+        topicTabs.innerHTML = Object.entries(state.topicsPrepared)
+          .map(([topicId, topic]) => {
+            const active = topicId === state.activeTopicId;
+            return `
+              <button
+                type="button"
+                data-topic="${topicId}"
+                data-active="${active}"
+                aria-pressed="${active}"
+                style="background:${active ? topic.accent : "rgba(255,255,255,0.86)"}"
+              >
+                ${escapeHtml(topic.label)}
+              </button>
+            `;
+          })
+          .join("");
+      }
+
+      function initialWidgetState(step) {
+        switch (step.widget) {
+          case "equation-slider":
+            return {
+              value: step.config.min,
+              completed: false,
+              feedbackText: "",
+              feedbackPrepared: null,
+            };
+          case "packet-route":
+            return {
+              path: [],
+              completed: false,
+              feedbackText: "",
+              feedbackPrepared: null,
+            };
+          case "reorder-steps":
+            return {
+              items: [...step.config.items],
+              completed: false,
+              feedbackText: "",
+              feedbackPrepared: null,
+            };
+          default:
+            return {
+              completed: false,
+              feedbackText: "",
+              feedbackPrepared: null,
+            };
+        }
+      }
+
+      function resetTopic(topicId) {
+        state.revealToken += 1;
+        state.activeTopicId = topicId;
+        state.revealedCount = 0;
+        state.typing = false;
+        state.choiceState = {};
+        state.widgetState = Object.fromEntries(
+          currentTopic()
+            .steps.filter(step => step.type === "widget")
+            .map(step => [step.id, initialWidgetState(step)]),
+        );
+        state.seenStepIds = new Set();
+        setTheme(currentTopic().accent);
+        buildTopicTabs();
+        queueRender(true);
+        revealNextBatch();
+      }
+
+      function getChoiceState(stepId) {
+        return state.choiceState[stepId] || {
+          selectedId: null,
+          correct: false,
+          feedbackText: "",
+          feedbackPrepared: null,
+        };
+      }
+
+      function getWidgetState(stepId) {
+        return state.widgetState[stepId];
+      }
+
+      function delay(ms) {
+        return new Promise(resolve => window.setTimeout(resolve, ms));
+      }
+
+      async function revealNextBatch() {
+        const topic = currentTopic();
+        if (state.revealedCount >= topic.steps.length) {
+          queueRender(true);
+          return;
+        }
+
+        const token = ++state.revealToken;
+        const nextStep = topic.steps[state.revealedCount];
+        if (nextStep.type === "tutor") {
+          state.typing = true;
+          queueRender(true);
+          await delay(TYPE_DELAY_MS);
+          if (token !== state.revealToken) return;
+          state.typing = false;
+        }
+
+        while (state.revealedCount < topic.steps.length) {
+          const step = topic.steps[state.revealedCount];
+          state.revealedCount += 1;
+          if (step.type === "choice" || step.type === "widget") break;
+        }
+
+        queueRender(true);
+      }
+
+      function completeChoice(step, option) {
+        state.choiceState[step.id] = {
+          selectedId: option.id,
+          correct: true,
+          feedbackText: step.success,
+          feedbackPrepared: step.successPrepared,
+        };
+        queueRender(true);
+        window.setTimeout(() => {
+          revealNextBatch();
+        }, REVEAL_DELAY_MS);
+      }
+
+      function chooseOption(stepId, optionId) {
+        const step = currentTopic().steps.find(item => item.id === stepId);
+        if (!step || step.type !== "choice") return;
+        const choiceState = getChoiceState(stepId);
+        if (choiceState.correct) return;
+
+        const option = step.options.find(item => item.id === optionId);
+        if (!option) return;
+
+        if (option.correct) {
+          completeChoice(step, option);
+          return;
+        }
+
+        state.choiceState[step.id] = {
+          selectedId: option.id,
+          correct: false,
+          feedbackText: option.feedback,
+          feedbackPrepared: option.feedbackPrepared,
+        };
+        queueRender(true);
+      }
+
+      function setWidgetFeedback(step, feedbackText, prepared, completed = false) {
+        state.widgetState[step.id] = {
+          ...state.widgetState[step.id],
+          completed,
+          feedbackText,
+          feedbackPrepared: prepared,
+        };
+        queueRender(true);
+      }
+
+      function maybeCompleteWidget(step) {
+        const widgetState = getWidgetState(step.id);
+        if (widgetState.completed) return;
+        setWidgetFeedback(step, step.success, step.successPrepared, true);
+        window.setTimeout(() => {
+          revealNextBatch();
+        }, REVEAL_DELAY_MS);
+      }
+
+      function updateEquationSlider(stepId, value) {
+        const step = currentTopic().steps.find(item => item.id === stepId);
+        if (!step || step.type !== "widget" || step.widget !== "equation-slider") return;
+        const widgetState = getWidgetState(step.id);
+        const nextValue = Number.parseInt(value, 10);
+        state.widgetState[step.id] = {
+          ...widgetState,
+          value: nextValue,
+        };
+
+        if (nextValue === step.config.answer && !widgetState.completed) {
+          maybeCompleteWidget(step);
+        } else {
+          queueRender(false);
+        }
+      }
+
+      function tapPacketNode(stepId, nodeName) {
+        const step = currentTopic().steps.find(item => item.id === stepId);
+        if (!step || step.type !== "widget" || step.widget !== "packet-route") return;
+        const widgetState = getWidgetState(step.id);
+        if (widgetState.completed) return;
+
+        const target = step.config.target;
+        const nextIndex = widgetState.path.length;
+        if (nodeName !== target[nextIndex]) {
+          state.widgetState[step.id] = {
+            ...widgetState,
+            path: [],
+            feedbackText:
+              nextIndex === 0
+                ? "Start with the laptop. That is where the request begins."
+                : `Close, but the next hop after ${target[nextIndex - 1]} should be ${target[nextIndex]}.`,
+            feedbackPrepared: currentTopic().prepareReaction(
+              nextIndex === 0
+                ? "Start with the laptop. That is where the request begins."
+                : `Close, but the next hop after ${target[nextIndex - 1]} should be ${target[nextIndex]}.`,
+            ),
+          };
+          queueRender(true);
+          return;
+        }
+
+        const nextPath = [...widgetState.path, nodeName];
+        state.widgetState[step.id] = {
+          ...widgetState,
+          path: nextPath,
+          feedbackText: "",
+          feedbackPrepared: null,
+        };
+
+        if (nextPath.length === target.length) {
+          maybeCompleteWidget(step);
+          return;
+        }
+
+        queueRender(false);
+      }
+
+      function arraysEqual(a, b) {
+        return a.length === b.length && a.every((item, index) => item === b[index]);
+      }
+
+      function moveItem(list, fromIndex, toIndex) {
+        const next = [...list];
+        const [item] = next.splice(fromIndex, 1);
+        next.splice(toIndex, 0, item);
+        return next;
+      }
+
+      function checkReorder(stepId, nextItems) {
+        const step = currentTopic().steps.find(item => item.id === stepId);
+        if (!step || step.type !== "widget" || step.widget !== "reorder-steps") return;
+        const complete = arraysEqual(nextItems, step.config.target);
+        state.widgetState[step.id] = {
+          ...state.widgetState[step.id],
+          items: nextItems,
+          completed: complete,
+          feedbackText: complete ? step.success : "",
+          feedbackPrepared: complete ? step.successPrepared : null,
+        };
+        queueRender(true);
+        if (complete) {
+          window.setTimeout(() => {
+            revealNextBatch();
+          }, REVEAL_DELAY_MS);
+        }
+      }
+
+      function moveReorderItem(stepId, index, direction) {
+        const widgetState = getWidgetState(stepId);
+        if (!widgetState || widgetState.completed) return;
+        const nextIndex = index + direction;
+        if (nextIndex < 0 || nextIndex >= widgetState.items.length) return;
+        checkReorder(stepId, moveItem(widgetState.items, index, nextIndex));
+      }
+
+      function handleDragStart(event) {
+        const item = event.target.closest("[data-reorder-step][data-index]");
+        if (!item) return;
+        state.dragState = {
+          stepId: item.dataset.reorderStep,
+          index: Number.parseInt(item.dataset.index, 10),
+        };
+        event.dataTransfer.effectAllowed = "move";
+      }
+
+      function handleDragOver(event) {
+        const item = event.target.closest("[data-reorder-step][data-index]");
+        if (!item || !state.dragState) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+      }
+
+      function handleDrop(event) {
+        const item = event.target.closest("[data-reorder-step][data-index]");
+        if (!item || !state.dragState) return;
+        event.preventDefault();
+        const targetIndex = Number.parseInt(item.dataset.index, 10);
+        const { stepId, index } = state.dragState;
+        state.dragState = null;
+        if (stepId !== item.dataset.reorderStep || index === targetIndex) return;
+        const widgetState = getWidgetState(stepId);
+        if (!widgetState || widgetState.completed) return;
+        checkReorder(stepId, moveItem(widgetState.items, index, targetIndex));
+      }
+
+      function bubbleWidth(metrics) {
+        return state.compareMode === "css" ? metrics.cssWidth : metrics.tightWidth;
+      }
+
+      function renderReactionBubble(text, prepared, tone, availableWidth, renderStats, stepId) {
+        const metrics = measureBubble(prepared, "reaction", availableWidth);
+        renderStats.wastedPixels += metrics.wastedPixels;
+        if (metrics.wasteWidth > 0) renderStats.affectedBubbles += 1;
+        renderStats.totalTextBubbles += 1;
+        return `
+          <div class="msg-row msg-row--center">
+            <div
+              class="msg bubble bubble--reaction ${
+                state.compareMode === "css" && metrics.wasteWidth > 0 ? "bubble--css" : ""
+              }"
+              data-tone="${tone}"
+              data-step-id="${stepId}"
+              style="width:${bubbleWidth(metrics)}px;--waste-width:${metrics.wasteWidth}"
+            >
+              ${escapeHtml(text)}
+            </div>
+          </div>
+        `;
+      }
+
+      function renderTutorStep(step, availableWidth, renderStats) {
+        const metrics = measureBubble(step.prepared, "tutor", availableWidth);
+        renderStats.wastedPixels += metrics.wastedPixels;
+        if (metrics.wasteWidth > 0) renderStats.affectedBubbles += 1;
+        renderStats.totalTextBubbles += 1;
+        const isNew = !state.seenStepIds.has(step.id);
+        return `
+          <div class="msg-row msg-row--left">
+            <div class="msg__cluster ${isNew ? "msg" : ""}">
+              <span class="avatar">T</span>
+              <article
+                class="bubble bubble--tutor ${
+                  state.compareMode === "css" && metrics.wasteWidth > 0 ? "bubble--css" : ""
+                }"
+                data-step-id="${step.id}"
+                style="width:${bubbleWidth(metrics)}px;--waste-width:${metrics.wasteWidth}"
+              >
+                ${escapeHtml(step.text)}
+              </article>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderChoiceStep(step, availableWidth, renderStats) {
+        const choiceState = getChoiceState(step.id);
+        const isComplete = choiceState.correct;
+        const isNew = !state.seenStepIds.has(step.id);
+        const options = step.options
+          .map(option => {
+            const metrics = measureBubble(option.prepared, "choice", availableWidth);
+            renderStats.wastedPixels += metrics.wastedPixels;
+            if (metrics.wasteWidth > 0) renderStats.affectedBubbles += 1;
+            renderStats.totalTextBubbles += 1;
+            const selected = choiceState.selectedId === option.id;
+            return `
+              <button
+                type="button"
+                class="choice-button bubble bubble--choice ${
+                  state.compareMode === "css" && metrics.wasteWidth > 0 ? "bubble--css" : ""
+                }"
+                data-choice-step="${step.id}"
+                data-option-id="${option.id}"
+                aria-pressed="${selected}"
+                ${isComplete ? "disabled" : ""}
+                ${selected && option.correct ? 'data-correct="true"' : ""}
+                ${selected && !option.correct ? 'data-wrong="true"' : ""}
+                style="width:${bubbleWidth(metrics)}px;--waste-width:${metrics.wasteWidth}"
+              >
+                ${escapeHtml(option.text)}
+              </button>
+            `;
+          })
+          .join("");
+
+        let feedback = "";
+        if (choiceState.feedbackText && choiceState.feedbackPrepared) {
+          feedback = renderReactionBubble(
+            choiceState.feedbackText,
+            choiceState.feedbackPrepared,
+            choiceState.correct ? "good" : "warn",
+            availableWidth,
+            renderStats,
+            `${step.id}-feedback`,
+          );
+        }
+
+        return `
+          <div class="msg-row msg-row--right">
+            <div class="choice-stack ${isNew ? "msg" : ""}" data-step-id="${step.id}">
+              ${options}
+            </div>
+          </div>
+          ${feedback}
+        `;
+      }
+
+      function renderEquationWidget(step) {
+        const widgetState = getWidgetState(step.id);
+        const value = widgetState.value;
+        const result = 2 * value + 4;
+        const matches = value === step.config.answer;
+        return `
+          <div class="widget-card">
+            <span class="widget-card__eyebrow">Inline widget</span>
+            <h3>Test a value for x</h3>
+            <p>Use the slider to make the original equation true, not just the simplified one.</p>
+            <div class="slider-block">
+              <span class="equation-chip">${escapeHtml(step.config.equation)}</span>
+              <label>
+                <span class="widget-tip">x = ${value}</span>
+                <input
+                  type="range"
+                  min="${step.config.min}"
+                  max="${step.config.max}"
+                  value="${value}"
+                  data-slider-step="${step.id}"
+                />
+              </label>
+            </div>
+            <div class="widget-result">
+              <span class="widget-pill">2(${value}) + 4 = ${result}</span>
+              <span class="widget-pill">${escapeHtml(step.config.reducedEquation)}</span>
+              <span class="widget-pill">${matches ? "Match found" : "Keep testing"}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderPacketWidget(step) {
+        const widgetState = getWidgetState(step.id);
+        const routeProgress = widgetState.path.length
+          ? widgetState.path.map(label => `<span class="route-chip">${escapeHtml(label)}</span>`).join("")
+          : '<span class="route-chip">Tap the stops in order</span>';
+
+        return `
+          <div class="widget-card">
+            <span class="widget-card__eyebrow">Inline widget</span>
+            <h3>Route the packet</h3>
+            <p>Choose the next hop one step at a time. Wrong moves reset the path.</p>
+            <div class="route-progress">${routeProgress}</div>
+            <div class="packet-grid">
+              ${step.config.choices
+                .map(choice => {
+                  const used = widgetState.path.includes(choice) || widgetState.completed;
+                  return `
+                    <button
+                      type="button"
+                      class="packet-node"
+                      data-packet-step="${step.id}"
+                      data-node="${choice}"
+                      ${used ? "disabled" : ""}
+                    >
+                      ${escapeHtml(choice)}
+                    </button>
+                  `;
+                })
+                .join("")}
+            </div>
+          </div>
+        `;
+      }
+
+      function renderReorderWidget(step) {
+        const widgetState = getWidgetState(step.id);
+        return `
+          <div class="widget-card">
+            <span class="widget-card__eyebrow">Inline widget</span>
+            <h3>Reorder the loop</h3>
+            <p>Desktop: drag cards. Mobile: use the arrow buttons to move each phase.</p>
+            <ul class="reorder-list">
+              ${widgetState.items
+                .map((item, index) => {
+                  const atTop = index === 0;
+                  const atBottom = index === widgetState.items.length - 1;
+                  return `
+                    <li
+                      class="reorder-item"
+                      draggable="${widgetState.completed ? "false" : "true"}"
+                      data-reorder-step="${step.id}"
+                      data-index="${index}"
+                    >
+                      <span class="reorder-handle">::</span>
+                      <span class="reorder-label">${escapeHtml(item)}</span>
+                      <span class="reorder-actions">
+                        <button
+                          type="button"
+                          data-move-step="${step.id}"
+                          data-index="${index}"
+                          data-direction="-1"
+                          ${atTop || widgetState.completed ? "disabled" : ""}
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          data-move-step="${step.id}"
+                          data-index="${index}"
+                          data-direction="1"
+                          ${atBottom || widgetState.completed ? "disabled" : ""}
+                        >
+                          ↓
+                        </button>
+                      </span>
+                    </li>
+                  `;
+                })
+                .join("")}
+            </ul>
+          </div>
+        `;
+      }
+
+      function renderWidgetStep(step, availableWidth, renderStats) {
+        const widgetState = getWidgetState(step.id);
+        const isNew = !state.seenStepIds.has(step.id);
+        let inner = "";
+
+        switch (step.widget) {
+          case "equation-slider":
+            inner = renderEquationWidget(step);
+            break;
+          case "packet-route":
+            inner = renderPacketWidget(step);
+            break;
+          case "reorder-steps":
+            inner = renderReorderWidget(step);
+            break;
+          default:
+            inner = `
+              <div class="widget-card">
+                <span class="widget-card__eyebrow">Inline widget</span>
+                <h3>Widget placeholder</h3>
+              </div>
+            `;
+        }
+
+        let feedback = "";
+        if (widgetState.feedbackText && widgetState.feedbackPrepared) {
+          feedback = renderReactionBubble(
+            widgetState.feedbackText,
+            widgetState.feedbackPrepared,
+            widgetState.completed ? "good" : "warn",
+            availableWidth,
+            renderStats,
+            `${step.id}-feedback`,
+          );
+        }
+
+        return `
+          <div class="msg-row msg-row--full">
+            <div class="widget ${isNew ? "msg" : ""}" data-step-id="${step.id}">
+              ${inner}
+            </div>
+          </div>
+          ${feedback}
+        `;
+      }
+
+      function renderTyping() {
+        return `
+          <div class="msg-row msg-row--left">
+            <div class="msg__cluster">
+              <span class="avatar">T</span>
+              <div class="typing">
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function render() {
+        if (!state.topicsPrepared) return;
+        const topic = currentTopic();
+        setTheme(topic.accent);
+        phoneTitle.textContent = topic.label;
+        sideTitle.textContent = topic.label;
+        sideSummary.textContent = topic.summary;
+        modeBadge.textContent =
+          state.compareMode === "pretext" ? "Pretext shrinkwrap" : "CSS comparison";
+        compareToggle.checked = state.compareMode === "css";
+
+        const availableWidth = Math.max(260, thread.clientWidth - 28);
+        const renderStats = {
+          wastedPixels: 0,
+          affectedBubbles: 0,
+          totalTextBubbles: 0,
+        };
+
+        const visibleSteps = topic.steps.slice(0, state.revealedCount);
+        const html = visibleSteps
+          .map(step => {
+            switch (step.type) {
+              case "tutor":
+                return renderTutorStep(step, availableWidth, renderStats);
+              case "choice":
+                return renderChoiceStep(step, availableWidth, renderStats);
+              case "widget":
+                return renderWidgetStep(step, availableWidth, renderStats);
+              default:
+                return "";
+            }
+          })
+          .join("");
+
+        thread.innerHTML = html + (state.typing ? renderTyping() : "");
+
+        const progress = topic.steps.length === 0 ? 0 : state.revealedCount / topic.steps.length;
+        progressFill.style.width = `${progress * 100}%`;
+        progressTitle.textContent = `${state.revealedCount} of ${topic.steps.length} steps revealed`;
+        progressCopy.textContent =
+          state.revealedCount >= topic.steps.length
+            ? "This topic is fully revealed. Switch topics or turn on the CSS comparison to revisit the shrinkwrap difference."
+            : "The conversation pauses at the next choice or widget so the learner can act before more explanation appears.";
+
+        savedPixels.textContent = `${Math.round(renderStats.wastedPixels).toLocaleString()} px`;
+        savedPixels.className =
+          "metric-big " + (state.compareMode === "pretext" ? "metric-good" : "metric-warn");
+        savedPixelsLabel.textContent =
+          state.compareMode === "pretext"
+            ? `At this width, Pretext removes about ${Math.round(renderStats.wastedPixels).toLocaleString()} extra bubble pixels across ${renderStats.totalTextBubbles} visible text bubbles.`
+            : `This CSS comparison leaves about ${Math.round(renderStats.wastedPixels).toLocaleString()} extra bubble pixels visible right now.`;
+        modeExplain.textContent =
+          state.compareMode === "pretext"
+            ? "You are seeing the tightest width that keeps the same line count. Toggle the comparison on to reveal the pink leftover space CSS would keep."
+            : "Pink overlays mark bubble width that does not help the text fit; switching back restores the tighter Pretext version without changing the line count.";
+
+        progressHint.textContent =
+          state.revealedCount >= topic.steps.length
+            ? "Lesson complete. Try another topic or flip on the comparison toggle."
+            : "Tap the active choice or widget to reveal the next turn in the conversation.";
+
+        topicTabs.querySelectorAll("button[data-topic]").forEach(button => {
+          button.setAttribute(
+            "data-active",
+            String(button.dataset.topic === state.activeTopicId),
+          );
+          button.setAttribute(
+            "aria-pressed",
+            String(button.dataset.topic === state.activeTopicId),
+          );
+        });
+
+        visibleSteps.forEach(step => state.seenStepIds.add(step.id));
+
+        if (state.pendingScroll) {
+          state.pendingScroll = false;
+          requestAnimationFrame(scrollThreadToBottom);
+        }
+      }
+
+      function attachEvents() {
+        topicTabs.addEventListener("click", event => {
+          const button = event.target.closest("button[data-topic]");
+          if (!button || button.dataset.topic === state.activeTopicId) return;
+          resetTopic(button.dataset.topic);
+        });
+
+        compareToggle.addEventListener("change", event => {
+          state.compareMode = event.target.checked ? "css" : "pretext";
+          queueRender(false);
+        });
+
+        thread.addEventListener("click", event => {
+          const choiceButton = event.target.closest("[data-choice-step][data-option-id]");
+          if (choiceButton) {
+            chooseOption(choiceButton.dataset.choiceStep, choiceButton.dataset.optionId);
+            return;
+          }
+
+          const packetNode = event.target.closest("[data-packet-step][data-node]");
+          if (packetNode) {
+            tapPacketNode(packetNode.dataset.packetStep, packetNode.dataset.node);
+            return;
+          }
+
+          const moveButton = event.target.closest("[data-move-step][data-index][data-direction]");
+          if (moveButton) {
+            moveReorderItem(
+              moveButton.dataset.moveStep,
+              Number.parseInt(moveButton.dataset.index, 10),
+              Number.parseInt(moveButton.dataset.direction, 10),
+            );
+          }
+        });
+
+        thread.addEventListener("input", event => {
+          const slider = event.target.closest("[data-slider-step]");
+          if (!slider) return;
+          updateEquationSlider(slider.dataset.sliderStep, slider.value);
+        });
+
+        thread.addEventListener("dragstart", handleDragStart);
+        thread.addEventListener("dragover", handleDragOver);
+        thread.addEventListener("drop", handleDrop);
+        thread.addEventListener("dragend", () => {
+          state.dragState = null;
+        });
+
+        window.addEventListener("resize", () => {
+          queueRender(false);
+        });
+      }
+
+      async function boot() {
+        try {
+          await waitForFonts();
+          const pretext = await importPretext();
+          state.pretext = {
+            prepareWithSegments: pretext.prepareWithSegments,
+            walkLineRanges: pretext.walkLineRanges,
+            layout: pretext.layout,
+          };
+          state.topicsPrepared = prepareTopics(state.pretext);
+          buildTopicTabs();
+          attachEvents();
+          statusBanner.hidden = true;
+          resetTopic(state.activeTopicId);
+        } catch (error) {
+          console.error(error);
+          statusBanner.hidden = false;
+          statusBanner.textContent =
+            "Could not load Pretext from the CDN. If you are offline, reconnect and reload or swap in a local ESM copy.";
+        }
+      }
+
+      boot();
+    </script>
+  </body>
+</html>

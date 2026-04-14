@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>How Your Browser Lays Out Text</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --page-bg: #f6efe5;
+        --page-ink: #1d2530;
+        --muted: #607084;
+        --line: rgba(42, 56, 76, 0.1);
+        --panel: rgba(255, 252, 247, 0.84);
+        --panel-strong: rgba(255, 255, 255, 0.92);
+        --accent: #2d6ce0;
+        --accent-soft: rgba(45, 108, 224, 0.12);
+        --accent-warm: #d86c50;
+        --accent-cool: #11866f;
+        --shadow: 0 22px 56px rgba(39, 49, 64, 0.08);
+        --radius-xl: 30px;
+        --radius-lg: 24px;
+        --radius-md: 18px;
+        --site-width: min(1480px, calc(100vw - 32px));
+        --demo-width: 420px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--page-ink);
+        font-family: "Inter", Arial, sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(71, 169, 255, 0.16), transparent 28%),
+          radial-gradient(circle at top right, rgba(255, 183, 118, 0.15), transparent 24%),
+          linear-gradient(180deg, #fff9f0 0%, #f7efe5 46%, #f1e6d8 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(29, 37, 48, 0.028) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(29, 37, 48, 0.028) 1px, transparent 1px);
+        background-size: 22px 22px;
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.2), transparent 72%);
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .page {
+        width: var(--site-width);
+        margin: 0 auto;
+        padding: 28px 0 76px;
+      }
+
+      .hero {
+        display: grid;
+        gap: 22px;
+      }
+
+      .hero__panel {
+        display: grid;
+        gap: 18px;
+        padding: 30px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        background: var(--panel);
+        backdrop-filter: blur(18px);
+        box-shadow: var(--shadow);
+      }
+
+      .hero__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: #526273;
+        font: 700 12px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .hero__eyebrow::before {
+        content: "";
+        width: 44px;
+        height: 1px;
+        background: linear-gradient(90deg, var(--accent), rgba(45, 108, 224, 0));
+      }
+
+      .hero__grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+      }
+
+      .hero__copy h1 {
+        margin: 0;
+        font-family: "Fraunces", Georgia, serif;
+        font-size: clamp(2.7rem, 5vw, 5.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.06em;
+        max-width: 10ch;
+      }
+
+      .hero__copy p {
+        max-width: 68ch;
+        margin: 16px 0 0;
+        color: var(--muted);
+        font: 400 16px/1.72 Inter, Arial, sans-serif;
+      }
+
+      .hero__stats {
+        display: grid;
+        gap: 14px;
+      }
+
+      .stat {
+        padding: 18px;
+        border: 1px solid rgba(42, 56, 76, 0.08);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.84);
+      }
+
+      .stat__label {
+        display: block;
+        margin-bottom: 6px;
+        color: #718197;
+        font: 700 11px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .stat__value {
+        display: block;
+        font: 700 22px/1.15 Inter, Arial, sans-serif;
+      }
+
+      .stat p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font: 400 14px/1.6 Inter, Arial, sans-serif;
+      }
+
+      .prose {
+        margin-top: 28px;
+        color: #465569;
+        font: 400 17px/1.78 Inter, Arial, sans-serif;
+      }
+
+      .prose p {
+        max-width: 72ch;
+        margin: 0 0 16px;
+      }
+
+      .controls {
+        position: sticky;
+        top: 16px;
+        z-index: 20;
+        display: grid;
+        gap: 18px;
+        margin-top: 26px;
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: rgba(255, 252, 247, 0.9);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 16px 38px rgba(39, 49, 64, 0.07);
+      }
+
+      .controls__row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .controls__block {
+        display: grid;
+        gap: 10px;
+      }
+
+      .controls__label {
+        color: #64748a;
+        font: 700 11px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .preset-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .preset-group button,
+      .ghost-button {
+        appearance: none;
+        border: 1px solid rgba(42, 56, 76, 0.12);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.86);
+        color: #2a3847;
+        cursor: pointer;
+        font: 600 14px/1 Inter, Arial, sans-serif;
+        transition:
+          transform 160ms ease,
+          box-shadow 160ms ease,
+          background-color 160ms ease,
+          color 160ms ease,
+          border-color 160ms ease;
+      }
+
+      .preset-group button {
+        padding: 11px 15px;
+      }
+
+      .preset-group button:hover,
+      .preset-group button:focus-visible,
+      .ghost-button:hover,
+      .ghost-button:focus-visible {
+        transform: translateY(-1px);
+        outline: none;
+        box-shadow: 0 10px 22px rgba(39, 49, 64, 0.11);
+      }
+
+      .preset-group button[data-active="true"] {
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 12px 28px rgba(39, 49, 64, 0.16);
+      }
+
+      .slider-stack {
+        display: grid;
+        gap: 8px;
+        min-width: min(100%, 380px);
+      }
+
+      .slider-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .slider-value {
+        color: #2b3847;
+        font: 700 18px/1 Inter, Arial, sans-serif;
+      }
+
+      .slider-stack input[type="range"] {
+        width: min(100%, 420px);
+        accent-color: var(--accent);
+      }
+
+      .slider-foot {
+        color: #6a788c;
+        font: 500 13px/1.55 Inter, Arial, sans-serif;
+      }
+
+      .metrics {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      .metric-card {
+        padding: 14px 16px;
+        border: 1px solid rgba(42, 56, 76, 0.08);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.82);
+      }
+
+      .metric-card__label {
+        display: block;
+        margin-bottom: 6px;
+        color: #718197;
+        font: 700 10px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .metric-card__value {
+        display: block;
+        font: 800 20px/1.1 Inter, Arial, sans-serif;
+      }
+
+      .metric-card__sub {
+        display: block;
+        margin-top: 5px;
+        color: #667689;
+        font: 500 13px/1.45 Inter, Arial, sans-serif;
+      }
+
+      .compare {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-top: 26px;
+      }
+
+      .panel {
+        display: grid;
+        gap: 16px;
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 14px 34px rgba(39, 49, 64, 0.05);
+      }
+
+      .panel__header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .panel__eyebrow {
+        display: block;
+        margin-bottom: 6px;
+        color: #708095;
+        font: 700 11px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .panel h2 {
+        margin: 0;
+        font: 700 22px/1.15 Inter, Arial, sans-serif;
+      }
+
+      .panel__copy {
+        max-width: 34ch;
+        color: var(--muted);
+        font: 400 14px/1.65 Inter, Arial, sans-serif;
+      }
+
+      .width-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        background: rgba(42, 56, 76, 0.06);
+        color: #324152;
+        font: 700 13px/1 Inter, Arial, sans-serif;
+      }
+
+      .browser-frame,
+      .pretext-frame {
+        width: min(100%, calc(var(--demo-width) * 1px));
+      }
+
+      .browser-frame {
+        padding: 18px;
+        border: 1px solid rgba(42, 56, 76, 0.08);
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(252, 252, 255, 0.96), rgba(248, 244, 239, 0.92));
+      }
+
+      .browser-copy {
+        color: #1f2a37;
+        font: 500 16px/26px Inter, Arial, sans-serif;
+        white-space: normal;
+        word-break: normal;
+        overflow-wrap: break-word;
+      }
+
+      .browser-note {
+        margin-top: 14px;
+        color: #657689;
+        font: 500 13px/1.55 Inter, Arial, sans-serif;
+      }
+
+      .pretext-frame {
+        display: grid;
+        gap: 12px;
+      }
+
+      .line-row {
+        display: grid;
+        gap: 8px;
+        padding: 14px;
+        border: 1px solid rgba(42, 56, 76, 0.08);
+        border-radius: 18px;
+        background: rgba(249, 252, 255, 0.84);
+      }
+
+      .token-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+      }
+
+      .token-row[dir="rtl"] {
+        justify-content: flex-end;
+      }
+
+      .token-pill {
+        position: relative;
+        display: inline-flex;
+        align-items: flex-end;
+        min-height: 34px;
+        padding: 12px 8px 5px;
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--accent) 12%, white);
+        color: #28374a;
+        font: 600 13px/1 Inter, Arial, sans-serif;
+        white-space: nowrap;
+      }
+
+      .token-pill::before {
+        content: attr(data-width);
+        position: absolute;
+        top: 4px;
+        left: 8px;
+        color: #6a7890;
+        font: 700 9px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .token-pill.is-fresh {
+        animation: prepFlash 460ms ease;
+      }
+
+      .meter {
+        position: relative;
+        height: 12px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(42, 56, 76, 0.08);
+      }
+
+      .meter__fill {
+        height: 100%;
+        width: 0;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 45%, white));
+      }
+
+      .meter__cap {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        width: 2px;
+        background: rgba(216, 108, 80, 0.7);
+      }
+
+      .line-text {
+        color: #1f2a37;
+        font: 500 16px/26px Inter, Arial, sans-serif;
+        white-space: pre-wrap;
+        word-break: normal;
+      }
+
+      .line-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        color: #667689;
+        font: 600 12px/1.45 Inter, Arial, sans-serif;
+      }
+
+      .break-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 9px;
+        border-radius: 999px;
+        background: rgba(216, 108, 80, 0.12);
+        color: #a24938;
+      }
+
+      .story-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-top: 28px;
+      }
+
+      .story-card {
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 14px 34px rgba(39, 49, 64, 0.05);
+      }
+
+      .story-card__eyebrow {
+        display: block;
+        margin-bottom: 8px;
+        color: #718197;
+        font: 700 11px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .story-card h2,
+      .story-card h3 {
+        margin: 0;
+        font: 700 22px/1.15 Inter, Arial, sans-serif;
+      }
+
+      .story-card p {
+        margin: 12px 0 0;
+        color: var(--muted);
+        font: 400 14px/1.68 Inter, Arial, sans-serif;
+      }
+
+      .prepare-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .ghost-button {
+        padding: 10px 14px;
+      }
+
+      .measure-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .measure-pill {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 64px;
+        padding: 10px 12px;
+        border: 1px solid rgba(42, 56, 76, 0.08);
+        border-radius: 16px;
+        background: rgba(248, 250, 255, 0.92);
+      }
+
+      .measure-pill__label {
+        color: #253242;
+        font: 700 13px/1.2 Inter, Arial, sans-serif;
+      }
+
+      .measure-pill__meta {
+        color: #718197;
+        font: 700 10px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .split-list {
+        display: grid;
+        gap: 10px;
+        margin: 16px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .split-list li {
+        display: grid;
+        gap: 5px;
+        padding: 14px;
+        border: 1px solid rgba(42, 56, 76, 0.08);
+        border-radius: 16px;
+        background: rgba(249, 248, 244, 0.92);
+      }
+
+      .split-list strong {
+        font: 700 14px/1.4 Inter, Arial, sans-serif;
+      }
+
+      .split-list span {
+        color: #667689;
+        font: 500 13px/1.55 Inter, Arial, sans-serif;
+      }
+
+      .use-cases {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-top: 28px;
+      }
+
+      .use-case {
+        display: grid;
+        gap: 10px;
+        padding: 20px;
+        border: 1px solid rgba(42, 56, 76, 0.08);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 14px 30px rgba(39, 49, 64, 0.05);
+        text-decoration: none;
+      }
+
+      .use-case__eyebrow {
+        color: #718197;
+        font: 700 11px/1 Inter, Arial, sans-serif;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .use-case h3 {
+        margin: 0;
+        font: 700 20px/1.12 Inter, Arial, sans-serif;
+      }
+
+      .use-case p {
+        margin: 0;
+        color: var(--muted);
+        font: 400 14px/1.65 Inter, Arial, sans-serif;
+      }
+
+      .use-case__tag {
+        color: var(--accent);
+        font: 700 13px/1 Inter, Arial, sans-serif;
+      }
+
+      .footer {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 14px;
+        margin-top: 30px;
+        color: #657588;
+        font: 500 14px/1.6 Inter, Arial, sans-serif;
+      }
+
+      .footer a {
+        font-weight: 700;
+        text-decoration-thickness: 1px;
+      }
+
+      @keyframes prepFlash {
+        from {
+          transform: translateY(8px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 1180px) {
+        .hero__grid,
+        .compare,
+        .story-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .metrics,
+        .use-cases {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 760px) {
+        .page {
+          width: min(100vw - 20px, 100%);
+          padding-top: 18px;
+        }
+
+        .hero__panel,
+        .controls,
+        .panel,
+        .story-card,
+        .use-case {
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+
+        .controls {
+          top: 10px;
+        }
+
+        .metrics,
+        .use-cases {
+          grid-template-columns: 1fr;
+        }
+
+        .hero__copy h1 {
+          max-width: 10ch;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        .preset-group button,
+        .ghost-button,
+        .token-pill.is-fresh {
+          animation: none;
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <section class="hero__panel">
+          <span class="hero__eyebrow">PRD 01 Prototype</span>
+          <div class="hero__grid">
+            <div class="hero__copy">
+              <h1>How your browser lays out text.</h1>
+              <p>
+                Every website you visit is silently running a text layout
+                algorithm. This explorable lets you drag the width, switch
+                languages, and watch one version stay opaque while the other one
+                shows the measured pieces, line widths, and break decisions.
+              </p>
+            </div>
+            <div class="hero__stats">
+              <div class="stat">
+                <span class="stat__label">Aha moment</span>
+                <span class="stat__value">Same text, same width, very different visibility</span>
+                <p>The browser panel wraps text normally. The Pretext panel exposes what the browser usually hides.</p>
+              </div>
+              <div class="stat">
+                <span class="stat__label">Core split</span>
+                <span class="stat__value">Prepare once, layout many times</span>
+                <p>Preparing measures the text. Layout reuses that cached information every time the width changes.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </header>
+
+      <section class="prose">
+        <p>
+          The slider below is the whole lesson. Drag it and both panels update.
+          The left side uses ordinary DOM wrapping. The right side uses Pretext,
+          which means we can inspect the measured token widths, the exact line
+          widths, and the cached arithmetic that powers the reflow.
+        </p>
+      </section>
+
+      <section class="controls" aria-label="Explorable controls">
+        <div class="controls__row">
+          <div class="controls__block">
+            <span class="controls__label">Text preset</span>
+            <div class="preset-group" id="presetGroup" role="group" aria-label="Text presets"></div>
+          </div>
+          <div class="controls__block">
+            <span class="controls__label">Width slider</span>
+            <div class="slider-stack">
+              <div class="slider-head">
+                <span id="sliderLabel">Current width</span>
+                <span class="slider-value" id="sliderValue">420px</span>
+              </div>
+              <input
+                id="widthSlider"
+                type="range"
+                min="220"
+                max="780"
+                step="2"
+                value="420"
+              />
+              <span class="slider-foot" id="presetNote">
+                Moving the slider reruns layout only. It does not re-measure the text.
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="metrics" aria-label="Performance counters">
+          <div class="metric-card">
+            <span class="metric-card__label">prepare phase</span>
+            <span class="metric-card__value" id="prepareMs">--</span>
+            <span class="metric-card__sub" id="prepareCount">ran 0 times</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-card__label">layout()</span>
+            <span class="metric-card__value" id="layoutMs">--</span>
+            <span class="metric-card__sub" id="layoutCount">ran 0 times</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-card__label">lineCount</span>
+            <span class="metric-card__value" id="lineCount">--</span>
+            <span class="metric-card__sub">from Pretext</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-card__label">height</span>
+            <span class="metric-card__value" id="layoutHeight">--</span>
+            <span class="metric-card__sub">for this width</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-card__label">DOM text reads</span>
+            <span class="metric-card__value">0</span>
+            <span class="metric-card__sub">in the Pretext layout hot path</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="compare" aria-label="Browser versus Pretext comparison">
+        <article class="panel">
+          <div class="panel__header">
+            <div>
+              <span class="panel__eyebrow">The browser's way</span>
+              <h2>It just wraps.</h2>
+            </div>
+            <span class="width-badge" id="browserBadge">420px box</span>
+          </div>
+          <p class="panel__copy">
+            This is a real DOM paragraph with ordinary CSS wrapping. It works,
+            but the measurements and break decisions stay hidden.
+          </p>
+          <div class="browser-frame">
+            <div class="browser-copy" id="browserCopy"></div>
+            <div class="browser-note" id="browserNote">
+              The browser knows the answer, but it does not expose the process.
+            </div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel__header">
+            <div>
+              <span class="panel__eyebrow">Pretext's way</span>
+              <h2>It shows its work.</h2>
+            </div>
+            <span class="width-badge" id="pretextBadge">420px max width</span>
+          </div>
+          <p class="panel__copy" id="pretextSummary">
+            Preparing measures the text once. The slider only reruns layout, which is why the numbers stay tiny.
+          </p>
+          <div class="pretext-frame" id="pretextFrame"></div>
+        </article>
+      </section>
+
+      <section class="story-grid">
+        <article class="story-card">
+          <div class="prepare-head">
+            <div>
+              <span class="story-card__eyebrow">Section 2</span>
+              <h2>The prepare/layout split</h2>
+            </div>
+            <button class="ghost-button" id="rerunPrepare" type="button">
+              Rerun prepare
+            </button>
+          </div>
+          <p id="prepareStory">
+            The current preset has not been prepared yet.
+          </p>
+          <div class="measure-list" id="measureList"></div>
+        </article>
+
+        <article class="story-card">
+          <span class="story-card__eyebrow">Section 3</span>
+          <h2>Why this matters beyond one paragraph</h2>
+          <p>
+            Once text measurement is cheap, you can ask layout questions without
+            rendering first. That changes what a web interface is allowed to do.
+          </p>
+          <ul class="split-list">
+            <li>
+              <strong>Virtual scrolling</strong>
+              <span>Know text heights before items enter the viewport.</span>
+            </li>
+            <li>
+              <strong>Shrinkwrap</strong>
+              <span>Find the tightest chat bubble width instead of living with CSS dead space.</span>
+            </li>
+            <li>
+              <strong>Custom layout</strong>
+              <span>Route text around live obstacles or into custom columns with arithmetic instead of reflow loops.</span>
+            </li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="use-cases" aria-label="Use case links">
+        <a class="use-case" href="../2026-03-28-student-showcase-masonry/index.html">
+          <span class="use-case__eyebrow">Use case 1</span>
+          <h3>Virtual scrolling wall</h3>
+          <p>Precompute card heights for a masonry feed instead of measuring every card in the DOM.</p>
+          <span class="use-case__tag">Open PRD 02 prototype</span>
+        </a>
+        <a class="use-case" href="../2026-03-28-socratic-chat-shrinkwrap/index.html">
+          <span class="use-case__eyebrow">Use case 2</span>
+          <h3>Chat shrinkwrap</h3>
+          <p>Use line widths to find the tightest multiline bubble that still keeps the same line count.</p>
+          <span class="use-case__tag">Open PRD 03 prototype</span>
+        </a>
+        <a class="use-case" href="https://chenglou.me/pretext/demos/editorial-engine" target="_blank" rel="noreferrer">
+          <span class="use-case__eyebrow">Use case 3</span>
+          <h3>Editorial layout</h3>
+          <p>Flow text around moving obstacles and across custom columns without depending on CSS Shapes.</p>
+          <span class="use-case__tag">Open upstream demo</span>
+        </a>
+      </section>
+
+      <footer class="footer">
+        <span>
+          Read more:
+          <a href="https://github.com/chenglou/pretext" target="_blank" rel="noreferrer">Pretext repo</a>,
+          <a href="https://github.com/chenglou/pretext/blob/main/RESEARCH.md" target="_blank" rel="noreferrer">RESEARCH.md</a>,
+          <a href="https://worrydream.com/ExplorableExplanations/" target="_blank" rel="noreferrer">Explorable Explanations</a>
+        </span>
+        <span>
+          Single-file prototype for GitHub Pages and local classroom demos.
+        </span>
+      </footer>
+    </div>
+
+    <script type="module">
+      // EDIT THIS SECTION: swap in your own paragraphs here.
+      const PRESETS = {
+        english: {
+          id: "english",
+          label: "English",
+          locale: "en",
+          direction: "ltr",
+          granularity: "word",
+          note: "A plain-language explainer paragraph with ordinary spaces and punctuation.",
+          text:
+            "When a paragraph wraps, the browser is quietly adding widths, checking where the next piece would land, and deciding when a new line needs to begin. Most people never see that process. They only see the finished paragraph sitting there as if it arrived fully formed.",
+        },
+        emoji: {
+          id: "emoji",
+          label: "Emoji + text",
+          locale: "en",
+          direction: "ltr",
+          granularity: "word",
+          note: "Emoji stay in the same pipeline, but their widths can surprise people.",
+          text:
+            "A class chat can mix words, numbers, and emoji without changing the basic problem. The browser still has to answer: how wide is this run of text, when does it wrap, and what happens when the next 🚀 or 📚 lands at the edge of the line?",
+        },
+        cjk: {
+          id: "cjk",
+          label: "CJK",
+          locale: "ja",
+          direction: "ltr",
+          granularity: "grapheme",
+          note: "Japanese and Chinese wrapping does not depend on spaces the way English does.",
+          text:
+            "文字の折り返しは英語のように空白だけで決まるわけではありません。幅が変わるたびに、どこまでが同じ行に入るかを細かく判断し続ける必要があります。",
+        },
+        arabic: {
+          id: "arabic",
+          label: "Arabic",
+          locale: "ar",
+          direction: "rtl",
+          granularity: "word",
+          note: "Arabic adds right-to-left flow to the same measurement story.",
+          text:
+            "عندما يتغير عرض الفقرة لا يكفي أن نعرف الكلمات فقط، بل يجب أن نعرف كيف تتحرك الأسطر من اليمين إلى اليسار وأين يحدث الانتقال إلى السطر التالي بدقة.",
+        },
+        mixed: {
+          id: "mixed",
+          label: "Mixed",
+          locale: "en",
+          direction: "ltr",
+          granularity: "word",
+          note: "Mixed scripts make the invisible work feel more dramatic.",
+          text:
+            "A modern interface might mix English, العربية, 日本語, and emoji like 🎉 in one message. The text still needs one coherent answer about width, height, and line breaks before the UI can place anything else around it.",
+        },
+      };
+
+      const DEMO_FONT = '500 16px "Inter", Arial, sans-serif';
+      const LINE_HEIGHT = 26;
+      const MEASURE_PREVIEW_LIMIT = 18;
+
+      const presetGroup = document.getElementById("presetGroup");
+      const widthSlider = document.getElementById("widthSlider");
+      const sliderValue = document.getElementById("sliderValue");
+      const sliderLabel = document.getElementById("sliderLabel");
+      const presetNote = document.getElementById("presetNote");
+      const browserCopy = document.getElementById("browserCopy");
+      const browserNote = document.getElementById("browserNote");
+      const browserBadge = document.getElementById("browserBadge");
+      const pretextBadge = document.getElementById("pretextBadge");
+      const pretextSummary = document.getElementById("pretextSummary");
+      const pretextFrame = document.getElementById("pretextFrame");
+      const measureList = document.getElementById("measureList");
+      const prepareStory = document.getElementById("prepareStory");
+      const rerunPrepare = document.getElementById("rerunPrepare");
+      const prepareMs = document.getElementById("prepareMs");
+      const prepareCount = document.getElementById("prepareCount");
+      const layoutMs = document.getElementById("layoutMs");
+      const layoutCount = document.getElementById("layoutCount");
+      const lineCount = document.getElementById("lineCount");
+      const layoutHeight = document.getElementById("layoutHeight");
+
+      const segmenterCache = new Map();
+      const graphemeCache = new Map();
+
+      const state = {
+        pretext: null,
+        activePresetId: "english",
+        requestedWidth: 420,
+        actualWidth: 420,
+        prepareRunCount: 0,
+        layoutRunCount: 0,
+        lastPrepareMs: 0,
+        lastLayoutMs: 0,
+        lastLineCount: 0,
+        lastHeight: 0,
+        isFallbackEngine: false,
+        preparedRich: null,
+        previewSegments: [],
+        lines: [],
+        flashMeasurePreview: false,
+        rafId: null,
+      };
+
+      function currentPreset() {
+        return PRESETS[state.activePresetId];
+      }
+
+      function getSegmenter(locale, granularity) {
+        const key = `${locale}:${granularity}`;
+        if (!segmenterCache.has(key)) {
+          segmenterCache.set(
+            key,
+            new Intl.Segmenter(locale, { granularity }),
+          );
+        }
+        return segmenterCache.get(key);
+      }
+
+      function getGraphemes(segment) {
+        if (graphemeCache.has(segment)) return graphemeCache.get(segment);
+        const graphemes = [];
+        for (const part of getSegmenter(undefined, "grapheme").segment(segment)) {
+          graphemes.push(part.segment);
+        }
+        graphemeCache.set(segment, graphemes);
+        return graphemes;
+      }
+
+      async function importPretext() {
+        const urls = [
+          "https://esm.sh/@chenglou/pretext@0.0.4?bundle",
+          "https://cdn.jsdelivr.net/npm/@chenglou/pretext@0.0.4/+esm",
+        ];
+        let lastError = null;
+        for (const url of urls) {
+          try {
+            return await import(url);
+          } catch (error) {
+            lastError = error;
+          }
+        }
+        throw lastError;
+      }
+
+      async function waitForFonts() {
+        if (!("fonts" in document)) return;
+        await Promise.all([document.fonts.load(DEMO_FONT), document.fonts.ready]);
+      }
+
+      function createLocalPretextFallback(getPreset) {
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+
+        function measureWidth(text, font) {
+          if (!context) return text.length * 8;
+          context.font = font;
+          return context.measureText(text).width;
+        }
+
+        function materializeLineText(prepared, line) {
+          return linePiecesFromRange(prepared, line)
+            .map(piece => piece.text)
+            .join("");
+        }
+
+        function fallbackWalkLineRanges(prepared, maxWidth, onLine) {
+          if (!prepared.segments.length) return 0;
+
+          let lineCount = 0;
+          let cursorSegmentIndex = 0;
+          let cursorGraphemeIndex = 0;
+
+          while (cursorSegmentIndex < prepared.segments.length) {
+            const lineStart = {
+              segmentIndex: cursorSegmentIndex,
+              graphemeIndex: cursorGraphemeIndex,
+            };
+            let lineWidth = 0;
+            let emittedPartialLine = false;
+
+            while (cursorSegmentIndex < prepared.segments.length) {
+              const segmentIndex = cursorSegmentIndex;
+              const segment = prepared.segments[segmentIndex] ?? "";
+              const isSpace = /^\s+$/.test(segment);
+              const graphemeWidths = prepared.breakableWidths?.[segmentIndex] ?? null;
+              const startGraphemeIndex = cursorGraphemeIndex;
+              const segmentWidth =
+                graphemeWidths && startGraphemeIndex > 0
+                  ? graphemeWidths
+                      .slice(startGraphemeIndex)
+                      .reduce((sum, width) => sum + width, 0)
+                  : prepared.widths[segmentIndex] ?? 0;
+
+              if (!isSpace && lineWidth > 0 && lineWidth + segmentWidth > maxWidth) {
+                break;
+              }
+
+              if (!isSpace && graphemeWidths && lineWidth === 0 && segmentWidth > maxWidth) {
+                let fitCount = startGraphemeIndex;
+                let fitWidth = 0;
+                for (let index = startGraphemeIndex; index < graphemeWidths.length; index += 1) {
+                  const nextWidth = graphemeWidths[index] ?? 0;
+                  if (fitCount > startGraphemeIndex && fitWidth + nextWidth > maxWidth) break;
+                  fitWidth += nextWidth;
+                  fitCount += 1;
+                  if (fitWidth >= maxWidth) break;
+                }
+
+                if (fitCount === startGraphemeIndex) {
+                  fitWidth = graphemeWidths[startGraphemeIndex] ?? segmentWidth;
+                  fitCount += 1;
+                }
+
+                onLine({
+                  width: fitWidth,
+                  start: lineStart,
+                  end: {
+                    segmentIndex,
+                    graphemeIndex: fitCount,
+                  },
+                });
+                lineCount += 1;
+                emittedPartialLine = true;
+
+                if (fitCount >= graphemeWidths.length) {
+                  cursorSegmentIndex += 1;
+                  cursorGraphemeIndex = 0;
+                } else {
+                  cursorGraphemeIndex = fitCount;
+                }
+                break;
+              }
+
+              lineWidth += segmentWidth;
+              cursorSegmentIndex += 1;
+              cursorGraphemeIndex = 0;
+            }
+
+            if (emittedPartialLine) continue;
+
+            onLine({
+              width: lineWidth,
+              start: lineStart,
+              end: {
+                segmentIndex: cursorSegmentIndex,
+                graphemeIndex: cursorGraphemeIndex,
+              },
+            });
+            lineCount += 1;
+          }
+
+          return lineCount;
+        }
+
+        return {
+          prepareWithSegments(text, font) {
+            const preset = getPreset();
+            const segmenter = getSegmenter(preset.locale, preset.granularity);
+            const segments = [];
+            const widths = [];
+            const breakableWidths = [];
+
+            for (const part of segmenter.segment(text)) {
+              const segment = part.segment;
+              if (!segment) continue;
+              segments.push(segment);
+              widths.push(measureWidth(segment, font));
+
+              if (/^\s+$/.test(segment)) {
+                breakableWidths.push(null);
+                continue;
+              }
+
+              const graphemes = getGraphemes(segment);
+              if (graphemes.length <= 1) {
+                breakableWidths.push(null);
+                continue;
+              }
+
+              breakableWidths.push(
+                graphemes.map(grapheme => measureWidth(grapheme, font)),
+              );
+            }
+
+            return {
+              segments,
+              widths,
+              breakableWidths,
+            };
+          },
+
+          layout(prepared, maxWidth, lineHeight) {
+            const lineCount = fallbackWalkLineRanges(prepared, maxWidth, () => {});
+            return {
+              lineCount,
+              height: lineCount * lineHeight,
+            };
+          },
+
+          walkLineRanges(prepared, maxWidth, onLine) {
+            return fallbackWalkLineRanges(prepared, maxWidth, onLine);
+          },
+
+          layoutWithLines(prepared, maxWidth, lineHeight) {
+            const lines = [];
+            const lineCount = fallbackWalkLineRanges(prepared, maxWidth, line => {
+              lines.push({
+                ...line,
+                text: materializeLineText(prepared, line),
+              });
+            });
+            return {
+              lineCount,
+              height: lineCount * lineHeight,
+              lines,
+            };
+          },
+        };
+      }
+
+      function queueRender() {
+        if (state.rafId !== null) return;
+        state.rafId = requestAnimationFrame(() => {
+          state.rafId = null;
+          render();
+        });
+      }
+
+      function escapeHtml(value) {
+        return value
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function formatSegmentLabel(segment) {
+        if (segment === " ") return "space";
+        if (/^\s+$/.test(segment)) return `${segment.length} spaces`;
+        return segment;
+      }
+
+      function collectPreviewSegments(prepared) {
+        return prepared.segments
+          .map((segment, index) => ({
+            text: formatSegmentLabel(segment),
+            width: prepared.widths[index],
+          }))
+          .filter(segment => segment.text.length > 0);
+      }
+
+      function buildSegmentPiece(
+        prepared,
+        segmentIndex,
+        startGraphemeIndex = 0,
+        endGraphemeIndex = null,
+      ) {
+        const segment = prepared.segments[segmentIndex] ?? "";
+        const graphemeWidths = prepared.breakableWidths?.[segmentIndex] ?? null;
+        const graphemes = graphemeWidths ? getGraphemes(segment) : null;
+        const safeEndIndex =
+          graphemes === null
+            ? null
+            : endGraphemeIndex === null
+              ? graphemes.length
+              : endGraphemeIndex;
+
+        const text =
+          graphemes === null
+            ? segment
+            : graphemes.slice(startGraphemeIndex, safeEndIndex).join("");
+
+        let width = prepared.widths[segmentIndex] ?? 0;
+        if (graphemeWidths !== null && safeEndIndex !== null) {
+          width = 0;
+          for (let index = startGraphemeIndex; index < safeEndIndex; index += 1) {
+            width += graphemeWidths[index] ?? 0;
+          }
+        }
+
+        return {
+          text,
+          width,
+          isSpace: /^\s+$/.test(text),
+        };
+      }
+
+      function linePiecesFromRange(prepared, line) {
+        const pieces = [];
+        const startSegmentIndex = line.start.segmentIndex;
+        const endSegmentIndex = line.end.segmentIndex;
+        const startGraphemeIndex = line.start.graphemeIndex;
+        const endGraphemeIndex = line.end.graphemeIndex;
+
+        if (startSegmentIndex === endSegmentIndex) {
+          if (endGraphemeIndex > 0) {
+            pieces.push(
+              buildSegmentPiece(
+                prepared,
+                startSegmentIndex,
+                startGraphemeIndex,
+                endGraphemeIndex,
+              ),
+            );
+          }
+          return pieces.filter(piece => piece.text.length > 0);
+        }
+
+        for (let index = startSegmentIndex; index < endSegmentIndex; index += 1) {
+          pieces.push(
+            buildSegmentPiece(
+              prepared,
+              index,
+              index === startSegmentIndex ? startGraphemeIndex : 0,
+            ),
+          );
+        }
+
+        if (endGraphemeIndex > 0) {
+          pieces.push(buildSegmentPiece(prepared, endSegmentIndex, 0, endGraphemeIndex));
+        }
+
+        return pieces.filter(piece => piece.text.length > 0);
+      }
+
+      function piecesToVisualTokens(pieces) {
+        const tokens = [];
+        for (const piece of pieces) {
+          if (piece.isSpace) {
+            if (tokens.length > 0) {
+              tokens[tokens.length - 1].gapAfter += piece.width;
+            }
+            continue;
+          }
+          tokens.push({
+            text: piece.text,
+            width: piece.width,
+            gapAfter: 0,
+          });
+        }
+        return tokens;
+      }
+
+      function prepareCurrentPreset() {
+        const preset = currentPreset();
+        const start = performance.now();
+        buildPresetButtons();
+        state.preparedRich = state.pretext.prepareWithSegments(preset.text, DEMO_FONT);
+        const previewSegments = collectPreviewSegments(state.preparedRich).slice(
+          0,
+          MEASURE_PREVIEW_LIMIT,
+        );
+        state.previewSegments = previewSegments;
+        state.lastPrepareMs = performance.now() - start;
+        state.prepareRunCount += 1;
+        state.flashMeasurePreview = true;
+        window.setTimeout(() => {
+          state.flashMeasurePreview = false;
+          queueRender();
+        }, 520);
+        queueRender();
+      }
+
+      function clampWidthToFrame() {
+        const available = Math.max(
+          220,
+          Math.floor(
+            window.innerWidth < 1180 ? window.innerWidth - 88 : Number(widthSlider.max),
+          ),
+        );
+        state.actualWidth = Math.min(state.requestedWidth, available);
+      }
+
+      function buildPresetButtons() {
+        presetGroup.innerHTML = Object.values(PRESETS)
+          .map(preset => {
+            const active = preset.id === state.activePresetId;
+            return `
+              <button
+                type="button"
+                data-preset="${preset.id}"
+                data-active="${active}"
+                aria-pressed="${active}"
+                style="background:${active ? "var(--accent)" : "rgba(255,255,255,0.86)"}"
+              >
+                ${escapeHtml(preset.label)}
+              </button>
+            `;
+          })
+          .join("");
+      }
+
+      function renderMeasurePreview() {
+        if (state.previewSegments.length === 0) {
+          measureList.innerHTML = "";
+          return;
+        }
+
+        measureList.innerHTML = state.previewSegments
+          .map(segment => {
+            const widthLabel = `${segment.width.toFixed(1)}px`;
+            return `
+              <span class="measure-pill ${state.flashMeasurePreview ? "is-fresh" : ""}">
+                <span class="measure-pill__label">${escapeHtml(segment.text)}</span>
+                <span class="measure-pill__meta">${widthLabel}</span>
+              </span>
+            `;
+          })
+          .join("");
+      }
+
+      function layoutCurrentWidth() {
+        if (!state.preparedRich) return;
+
+        clampWidthToFrame();
+        const width = state.actualWidth;
+
+        const hotPathStart = performance.now();
+        const summary = state.pretext.layout(state.preparedRich, width, LINE_HEIGHT);
+        state.lastLayoutMs = performance.now() - hotPathStart;
+        state.layoutRunCount += 1;
+        state.lastLineCount = summary.lineCount;
+        state.lastHeight = summary.height;
+
+        const lineState = state.pretext.layoutWithLines(
+          state.preparedRich,
+          width,
+          LINE_HEIGHT,
+        );
+        const widths = [];
+        state.pretext.walkLineRanges(state.preparedRich, width, line => {
+          widths.push(line.width);
+        });
+
+        state.lines = lineState.lines.map((line, index) => ({
+          text: line.text,
+          width: widths[index] ?? line.width,
+          tokens: piecesToVisualTokens(linePiecesFromRange(state.preparedRich, line)),
+        }));
+      }
+
+      function renderLines() {
+        const width = state.actualWidth;
+        pretextFrame.innerHTML = state.lines
+          .map((line, index) => {
+            const percent = Math.min(100, (line.width / width) * 100);
+            const breakChip =
+              index < state.lines.length - 1
+                ? '<span class="break-chip">break -> next line</span>'
+                : "";
+            const tokenRow = line.tokens
+              .map(token => {
+                const pillWidth = Math.max(30, Math.ceil(token.width));
+                return `
+                  <span
+                    class="token-pill ${state.flashMeasurePreview ? "is-fresh" : ""}"
+                    data-width="${token.width.toFixed(1)}px"
+                    style="width:${pillWidth}px;margin-inline-end:${Math.ceil(token.gapAfter)}px"
+                  >
+                    ${escapeHtml(token.text)}
+                  </span>
+                `;
+              })
+              .join("");
+
+            return `
+              <div class="line-row" dir="${currentPreset().direction}">
+                <div class="token-row" dir="${currentPreset().direction}">
+                  ${tokenRow}
+                </div>
+                <div class="meter" aria-hidden="true">
+                  <div class="meter__fill" style="width:${percent}%"></div>
+                  <span class="meter__cap"></span>
+                </div>
+                <div class="line-text">${escapeHtml(line.text)}</div>
+                <div class="line-meta">
+                  <span>line ${index + 1}</span>
+                  <span>${line.width.toFixed(1)}px used of ${width}px</span>
+                  ${breakChip}
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function render() {
+        const preset = currentPreset();
+        layoutCurrentWidth();
+        renderMeasurePreview();
+
+        document.documentElement.style.setProperty("--demo-width", state.actualWidth);
+        sliderValue.textContent = `${state.actualWidth}px`;
+        sliderLabel.textContent = `Current width for ${preset.label}`;
+        presetNote.textContent = preset.note;
+        browserBadge.textContent = `${state.actualWidth}px box`;
+        pretextBadge.textContent = `${state.actualWidth}px max width`;
+        browserNote.textContent =
+          preset.direction === "rtl"
+            ? "The wrapping still works, but the line decisions remain hidden inside the browser."
+            : "The browser knows the break points, but it does not expose the process.";
+        browserCopy.textContent = preset.text;
+        browserCopy.dir = preset.direction;
+        browserCopy.style.width = `${state.actualWidth}px`;
+
+        prepareMs.textContent = `${state.lastPrepareMs.toFixed(2)}ms`;
+        prepareCount.textContent = `ran ${state.prepareRunCount} time${state.prepareRunCount === 1 ? "" : "s"}`;
+        layoutMs.textContent = `${state.lastLayoutMs.toFixed(3)}ms`;
+        layoutCount.textContent = `ran ${state.layoutRunCount} times`;
+        lineCount.textContent = String(state.lastLineCount);
+        layoutHeight.textContent = `${Math.round(state.lastHeight)}px`;
+        pretextSummary.textContent =
+          `prepareWithSegments() measured this preset once in ${state.lastPrepareMs.toFixed(2)}ms. The timing row is the cheap layout() pass at ${state.lastLayoutMs.toFixed(3)}ms, while the annotated panel separately walks those cached line ranges so you can see the break decisions.${state.isFallbackEngine ? " The page is currently using its built-in local fallback because the CDN copy of Pretext was unavailable." : ""}`;
+        prepareStory.textContent =
+          `The current preset exposes ${state.previewSegments.length} cached pieces in this preview. Clicking “Rerun prepare” repeats the measurement pass once, then the slider goes back to cheap layout work on the same prepared data.`;
+
+        renderLines();
+      }
+
+      function attachEvents() {
+        presetGroup.addEventListener("click", event => {
+          const button = event.target.closest("button[data-preset]");
+          if (!button) return;
+          const nextPreset = button.dataset.preset;
+          if (nextPreset === state.activePresetId) return;
+          state.activePresetId = nextPreset;
+          prepareCurrentPreset();
+        });
+
+        widthSlider.addEventListener("input", event => {
+          state.requestedWidth = Number.parseInt(event.target.value, 10);
+          queueRender();
+        });
+
+        rerunPrepare.addEventListener("click", () => {
+          prepareCurrentPreset();
+        });
+
+        window.addEventListener("resize", queueRender);
+      }
+
+      async function boot() {
+        await waitForFonts();
+        try {
+          const pretext = await importPretext();
+          state.pretext = {
+            layout: pretext.layout,
+            prepareWithSegments: pretext.prepareWithSegments,
+            layoutWithLines: pretext.layoutWithLines,
+            walkLineRanges: pretext.walkLineRanges,
+          };
+          state.isFallbackEngine = false;
+        } catch (error) {
+          console.warn("Falling back to the built-in explainer engine.", error);
+          state.pretext = createLocalPretextFallback(currentPreset);
+          state.isFallbackEngine = true;
+        }
+        attachEvents();
+        prepareCurrentPreset();
+      }
+
+      boot().catch(error => {
+        console.error(error);
+        pretextSummary.textContent =
+          "Could not start the explainer. Reload the page, or inspect the console for the startup error.";
+      });
+    </script>
+  </body>
+</html>
